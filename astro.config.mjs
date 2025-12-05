@@ -9,8 +9,13 @@ import react from '@astrojs/react';
 // https://astro.build/config
 export default defineConfig({
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    
   },
 
-  integrations: [sanity(), react()]
+  integrations: [sanity({
+    projectId: 'b7hk81le',
+    dataset: 'production',
+    useCdn: false
+  }), react()]
 });
