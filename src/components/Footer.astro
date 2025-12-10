@@ -1,0 +1,25 @@
+---
+import logo from '../assets/logo.svg';
+import facebook from '../assets/facebook.svg';
+import instagram from '../assets/instagram.svg';
+import whatsapp from '../assets/whatsapp.svg';
+import email from '../assets/email.svg';
+---
+
+<footer>
+  <img src={logo.src} alt="nextaz" />
+  <nav class="flex flex-row space-x-4">
+    <a href="https://www.facebook.com/nextaz/" target="_blank" rel="noopener">
+      <img src={facebook.src} alt="facebook" />
+    </a>
+    <a href="https://www.instagram.com/nextaz/" target="_blank" rel="noopener">
+      <img src={instagram.src} alt="instagram" />
+    </a>
+    <a href="https://wa.me/your-number" target="_blank" rel="noopener">
+      <img src={whatsapp.src} alt="whatsapp" />
+    </a>
+    <a href="mailto:">
+      <img src={email.src} alt="email" />
+    </a>
+  </nav>
+</footer>

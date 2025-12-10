@@ -1,0 +1,132 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { ClientRouter } from 'astro:transitions';
+import SpeedInsights from '@vercel/speed-insights/astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  keywords?: string;
+  type?: 'website';
+  author?: string;
+}
+
+const {
+  title = 'Nextaz - un shop de vinuri creat pentru pasionați TODO: change me',
+  description = 'TODO: change me - Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+  image = '/OG.jpg',
+  keywords = 'vinuri, shop vinuri, vinuri online, vinuri românești, vinuri internaționale, vinuri premium, cadouri vinuri, degustare vinuri',
+  type = 'website',
+  author = 'Nextaz Team',
+} = Astro.props;
+
+const siteUrl = Astro.site;
+const canonicalURL = new URL(Astro.url.pathname, siteUrl);
+const ogImageURL = new URL(image, siteUrl);
+const siteName = 'Nextaz';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/32.svg" />
+    <link rel="apple-touch-icon" href="/192.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="180x180" href="/180.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="author" content={author} />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Romanian" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Geographic Tags -->
+    <meta name="geo.region" content="RO" />
+    <meta name="geo.placename" content="Romania" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:locale" content="ro_RO" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+    <meta name="twitter:image:alt" content={title} />
+
+    <!-- WhatsApp specific -->
+    <meta property="og:image:secure_url" content={ogImageURL} />
+    <meta property="og:site_name" content={siteName} />
+
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+    <link rel="dns-prefetch" href="https://use.typekit.net" />
+    <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://use.typekit.net/smx5jap.css" crossorigin />
+
+    <!-- JSON-LD Structured Data -->
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Nextaz',
+        description: 'Nextaz - un shop de vinuri creat pentru pasionați TODO: change me',
+        url: Astro.site,
+        logo: new URL('/32.svg', Astro.site),
+        sameAs: [
+          // TODO: change me
+          'https://www.facebook.com/nextaz/',
+          'https://www.instagram.com/nextaz/',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'Customer Service',
+          availableLanguage: ['English', 'Romanian'],
+        },
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry: 'RO',
+        },
+      })}
+    />
+
+    <ClientRouter />
+  </head>
+  <body class="flex min-h-screen flex-col">
+    <Header transition:persist />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer transition:persist />
+    <SpeedInsights />
+  </body>
+</html>
