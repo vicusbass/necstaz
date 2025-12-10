@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="30" viewBox="0 0 40 30" fill="none">
+  <!-- Outer envelope -->
+  <rect x="1.25" y="1.25" width="37.5" height="27.5" rx="6"
+        stroke="#909090" stroke-width="2.5"/>
+
+  <!-- Flap -->
+  <path d="M1.25 6 L20 18 L38.75 6"
+        stroke="#909090" stroke-width="2.5"
+        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
