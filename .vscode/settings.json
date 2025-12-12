@@ -1,3 +1,4 @@
 {
-	"biome.enabled": false
+	"biome.enabled": false,
+	"css.lint.unknownAtRules": "ignore"
 }

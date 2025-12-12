@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import heroImage from '../assets/shop/wine-hero.png';
+---
+
+<Layout title="Shop | Nextaz">
+  <section class="flex flex-col lg:flex-row bg-gray-light overflow-hidden pt-10 lg:px-30">
+    <div class="flex flex-col justify-center py-8 sm:py-12 lg:py-16">
+      <h1 class="lg:text-9xl font-bold leading-none mb-4 lg:mb-12">Shop</h1>
+      <h2 class="lg:text-5xl text-2xl font-bold leading-none mb-6">Alege vinul tău preferat</h2>
+      <p class="text-xl leading-relaxed max-w-[600px]">
+        Descoperă gama Nextaz și comandă vinuri pentru acasă, cadouri,
+        petreceri sau evenimente speciale.
+      </p>
+    </div>
+    <div class="flex items-center justify-center lg:justify-end lg:flex-1 h-[40vh] sm:h-[50vh] lg:h-auto">
+      <Image 
+        src={heroImage} 
+        alt="Vinuri Nextaz - selecție de vinuri albe și rosé" 
+        class="w-full h-full object-cover object-center lg:object-left lg:scale-125 lg:origin-right"
+      />
+    </div>
+  </section>
+</Layout>
