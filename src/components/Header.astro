@@ -3,11 +3,13 @@ import Logo from '../assets/logo.svg';
 import CartIcon from '../assets/cart.svg';
 ---
 
-<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 lg:px-30">
+<header class="fixed top-8 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 lg:px-30">
   <a href="/" class="h-7 w-auto">
     <Logo />
   </a>
-  <nav class="flex items-center gap-8 lg:gap-16">
+
+  <!-- Desktop Navigation -->
+  <nav class="hidden lg:flex items-center gap-16">
     <a href="/" class="nav-link">Acasă</a>
     <a href="/shop" class="nav-link">Shop</a>
     <a href="/galerie" class="nav-link">Galerie</a>
@@ -16,4 +18,27 @@ import CartIcon from '../assets/cart.svg';
       <CartIcon />
     </a>
   </nav>
+
+  <!-- Mobile Navigation -->
+  <div class="flex lg:hidden items-center gap-6">
+    <a href="/cart" class="relative" aria-label="Coș de cumpărături">
+      <CartIcon class="h-6 w-auto" />
+      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 rounded-full"></span>
+    </a>
+    <button 
+      class="mobile-menu-toggle flex flex-col items-center justify-center gap-1 w-10 h-10 bg-black" 
+      aria-label="Meniu"
+      aria-expanded="false"
+    >
+      <span class="block w-5 h-0.5 bg-white"></span>
+      <span class="block w-5 h-0.5 bg-white"></span>
+      <span class="block w-5 h-0.5 bg-white"></span>
+    </button>
+  </div>
 </header>
+
+<style>
+  .mobile-menu-toggle span {
+    transition: all 0.3s ease;
+  }
+</style>
