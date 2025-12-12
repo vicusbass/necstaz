@@ -1,25 +1,62 @@
 ---
-import logo from '../assets/logo.svg';
-import facebook from '../assets/facebook.svg';
-import instagram from '../assets/instagram.svg';
-import whatsapp from '../assets/whatsapp.svg';
-import email from '../assets/email.svg';
+import Logo from '../assets/logo.svg';
+import Facebook from '../assets/facebook.svg';
+import Instagram from '../assets/instagram.svg';
+import Whatsapp from '../assets/whatsapp.svg';
+import Email from '../assets/email.svg';
 ---
 
-<footer>
-  <img src={logo.src} alt="nextaz" />
-  <nav class="flex flex-row space-x-4">
-    <a href="https://www.facebook.com/nextaz/" target="_blank" rel="noopener">
-      <img src={facebook.src} alt="facebook" />
-    </a>
-    <a href="https://www.instagram.com/nextaz/" target="_blank" rel="noopener">
-      <img src={instagram.src} alt="instagram" />
-    </a>
-    <a href="https://wa.me/your-number" target="_blank" rel="noopener">
-      <img src={whatsapp.src} alt="whatsapp" />
-    </a>
-    <a href="mailto:">
-      <img src={email.src} alt="email" />
-    </a>
-  </nav>
+<footer class="mx-16">
+  <div class="flex">
+    <!-- Logo and Social Icons -->
+    <div class="flex grow flex-col space-y-4">
+      <a href="/">
+        <Logo />
+      </a>
+      <nav class="flex flex-row space-x-4">
+        <a href="https://www.facebook.com/nextaz/" target="_blank" rel="noopener">
+          <Facebook />
+        </a>
+        <a href="https://www.instagram.com/nextaz/" target="_blank" rel="noopener">
+          <Instagram />
+        </a>
+        <a href="https://wa.me/your-number" target="_blank" rel="noopener">
+          <Whatsapp />
+        </a>
+        <a href="mailto:contact@nextaz.ro">
+          <Email />
+        </a>
+      </nav>
+    </div>
+
+    <!-- Three Column Layout -->
+    <div class="flex text-(--custom-gray)">
+      <div class="flex flex-col space-y-4 pr-16">
+        <a href="/" class="hover:darken transition-colors">Acasă</a>
+        <a href="/shop" class="hover:darken transition-colors">Shop</a>
+        <a href="/contact" class="hover:darken transition-colors">Contact</a>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="flex flex-col space-y-4 pr-16">
+        <a href="mailto:contact@nextaz.ro" class="hover:darken transition-colors"
+          >contact@nextaz.ro</a
+        >
+        <a href="tel:0755123456" class="hover:darken transition-colors">0755123456</a>
+        <span>Strada Mureșului, 5</span>
+        <span>Cluj-Napoca</span>
+      </div>
+
+      <div class="flex flex-col space-y-4 pr-16">
+        <a href="/politica-confidentialitate" class="hover:darken transition-colors"
+          >Politica de Confidențialitate</a
+        >
+        <a href="/termeni-conditii" class="hover:darken transition-colors">Termeni și Condiții</a>
+        <a href="/setari-cookies" class="hover:darken transition-colors">Setări Coookies</a>
+      </div>
+    </div>
+  </div>
+  <div class="border-t border-(--custom-gray) pt-6">
+    <p class="text-sm text-(--custom-gray)">design by Symbold®</p>
+  </div>
 </footer>

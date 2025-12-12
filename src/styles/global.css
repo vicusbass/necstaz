@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+:root {
+  --custom-gray: #909090;
+}
+
+body {
+  font-family: 'Red Hat Display Variable', sans-serif;
+}
+
+.hover\:darken:hover {
+  color: color-mix(in srgb, currentColor 70%, black 30%);
+}
