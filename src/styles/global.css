@@ -1,13 +1,60 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --custom-gray: #909090;
+/* ============================================
+   Theme - Custom CSS variables
+   ============================================ */
+@theme {
+  --color-gray: #909090;
+  --color-gray-light: #F2F2F2;
+  
+  --font-body: 'Red Hat Display Variable', sans-serif;
 }
 
-body {
-  font-family: 'Red Hat Display Variable', sans-serif;
+/* ============================================
+   Base - Element defaults
+   ============================================ */
+@layer base {
+  body {
+    font-family: var(--font-body);
+    color: var(--color-black);
+  }
 }
 
-.hover\:darken:hover {
-  color: color-mix(in srgb, currentColor 70%, black 30%);
+/* ============================================
+   Components - Reusable component styles
+   ============================================ */
+@layer components {
+  .main-content {
+    flex: 1;
+  }
+
+  .nav-link {
+    @apply text-lg font-normal transition-opacity;
+
+    &:hover {
+      @apply opacity-70;
+    }
+  }
+}
+
+/* ============================================
+   Utilities - Custom utility classes
+   ============================================ */
+@layer utilities {
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .bg-gray {
+    background-color: var(--color-gray);
+  }
+
+  .bg-gray-light {
+    background-color: var(--color-gray-light);
+  }
+
+  .hover-darken:hover {
+    color: color-mix(in srgb, currentColor 70%, black 30%);
+  }
 }

@@ -1,16 +1,19 @@
 ---
-import logo from '../assets/logo.svg';
-import cart from '../assets/cart.svg';
+import Logo from '../assets/logo.svg';
+import CartIcon from '../assets/cart.svg';
 ---
 
-<header class="flex items-center justify-between px-6 py-4">
-  <img src={logo.src} alt="nextaz" />
-  <nav class="flex flex-row space-x-4">
-    <a href="/">acasa</a>
-    <a href="/shop">shop</a>
-    <a href="/contact">contact</a>
-    <a href="/cart">
-      <img src={cart.src} alt="cos de cumparaturi" />
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 lg:px-30">
+  <a href="/" class="h-7 w-auto">
+    <Logo />
+  </a>
+  <nav class="flex items-center gap-8 lg:gap-16">
+    <a href="/" class="nav-link">Acasă</a>
+    <a href="/shop" class="nav-link">Shop</a>
+    <a href="/galerie" class="nav-link">Galerie</a>
+    <a href="/contact" class="nav-link">Contact</a>
+    <a href="/cart" class="nav-link h-6 w-auto" aria-label="Coș de cumpărături">
+      <CartIcon />
     </a>
   </nav>
 </header>
