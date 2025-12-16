@@ -38,6 +38,14 @@
     }
   }
 
+  .product-card {
+    @apply flex flex-col overflow-hidden shadow-[10px_10px_60px_#0000000d] transition-all duration-300;
+
+    &:hover {
+      @apply shadow-xl;
+    }
+  }
+
   .btn-add-to-cart {
     @apply w-max cursor-pointer border-none bg-black px-12 py-3 text-base font-medium text-white transition-all duration-200 lg:px-14 lg:py-3.5;
 

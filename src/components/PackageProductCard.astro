@@ -22,10 +22,7 @@ const { _id: id, name, image, description, price } = product;
 const imageUrl = urlFor(image)?.width(1200).height(600).url();
 ---
 
-<article
-  class="flex flex-col overflow-hidden shadow-[10px_10px_60px_#0000000d] transition-all duration-300 hover:shadow-2xl lg:flex-row"
-  data-product-id={id}
->
+<article class="product-card lg:flex-row" data-product-id={id}>
   <div
     class="relative flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-transparent lg:aspect-square lg:w-1/2"
   >
