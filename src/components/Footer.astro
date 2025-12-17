@@ -7,41 +7,41 @@ import Email from '../assets/email.svg';
 ---
 
 <footer class="text-gray text-base">
-  <div class="mx-16 flex">
+  <div class="mx-10 flex flex-col gap-11 lg:mx-30 lg:flex-row">
     <!-- Logo and Social Icons -->
-    <div class="mr-4 flex grow flex-col space-y-11">
+    <div class="mr-4 flex grow flex-col items-center space-y-11 lg:items-start">
       <a href="/">
         <Logo class="w-33 text-black" />
       </a>
-      <nav class="flex flex-row space-x-8">
-        <a href="https://www.facebook.com/nextaz/" target="_blank" rel="noopener">
-          <Facebook class="hover:darken" />
-        </a>
-        <a href="https://www.instagram.com/nextaz/" target="_blank" rel="noopener">
-          <Instagram class="hover:darken" />
-        </a>
-        <a href="https://wa.me/your-number" target="_blank" rel="noopener">
-          <Whatsapp class="hover:darken" />
-        </a>
-        <a href="mailto:contact@nextaz.ro">
-          <Email class="hover:darken" />
-        </a>
-      </nav>
-      <p class="max-w-80">
-        Eleganță, prospețime și autenticitate, create pentru momentele în care vrei să fie bine.
-      </p>
+      <div class="flex flex-col-reverse items-center gap-11 lg:flex-col lg:items-start">
+        <nav class="flex flex-row space-x-8">
+          <a href="https://www.facebook.com/nextaz/" target="_blank" rel="noopener">
+            <Facebook class="hover:darken" />
+          </a>
+          <a href="https://www.instagram.com/nextaz/" target="_blank" rel="noopener">
+            <Instagram class="hover:darken" />
+          </a>
+          <a href="https://wa.me/your-number" target="_blank" rel="noopener">
+            <Whatsapp class="hover:darken" />
+          </a>
+          <a href="mailto:contact@nextaz.ro">
+            <Email class="hover:darken" />
+          </a>
+        </nav>
+        <p class="max-w-80 text-center lg:text-left">
+          Eleganță, prospețime și autenticitate, create pentru momentele în care vrei să fie bine.
+        </p>
+      </div>
     </div>
 
-    <!-- Three Column Layout -->
-    <div class="flex">
-      <div class="flex flex-col space-y-6 pr-16">
+    <div class="flex items-center lg:items-start">
+      <div class="hidden flex-col space-y-6 pr-16 lg:flex">
         <a href="/" class="hover:darken">Acasă</a>
         <a href="/shop" class="hover:darken">Shop</a>
         <a href="/contact" class="hover:darken">Contact</a>
       </div>
 
-      <!-- Column 2 -->
-      <div class="flex flex-col space-y-6 pr-16">
+      <div class="hidden flex-col space-y-6 pr-16 lg:flex">
         <a href="mailto:contact@nextaz.ro" class="hover:darken">contact@nextaz.ro</a>
         <a href="tel:0755123456" class="hover:darken">0755123456</a>
         <div class="flex flex-col items-center lg:items-start">
@@ -50,17 +50,17 @@ import Email from '../assets/email.svg';
         </div>
       </div>
 
-      <div class="flex flex-col space-y-6 pr-16">
+      <div class="flex grow flex-col items-center space-y-6 lg:items-start lg:pr-16">
         <a href="/politica-confidentialitate" class="hover:darken">Politica de Confidențialitate</a>
         <a href="/termeni-conditii" class="hover:darken">Termeni și Condiții</a>
         <a href="/setari-cookies" class="hover:darken">Setări Coookies</a>
       </div>
     </div>
   </div>
-  <div class="mx-16 mt-10 border-t border-(--custom-gray) pt-10">
+  <div class="mx-10 mt-10 border-t border-(--custom-gray) pt-10 lg:mx-30">
     <p class="text-sm text-(--custom-gray)">design by Symbold®</p>
   </div>
-  <div class="h-[60%] w-full overflow-hidden">
+  <div class="aspect-13/2 w-full overflow-hidden">
     <Logo class="w-full opacity-10" />
   </div>
 </footer>
