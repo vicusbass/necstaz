@@ -1,13 +1,13 @@
 ---
 import Logo from '../assets/logo.svg';
-import CartIcon from '../assets/cart.svg';
+import Cart from '../assets/cart.svg';
 ---
 
 <header
   class="absolute top-8 right-0 left-0 z-50 flex items-center justify-between px-6 py-6 lg:px-30"
 >
-  <a href="/" class="h-7 w-auto">
-    <Logo />
+  <a href="/">
+    <Logo class="h-7 w-auto" />
   </a>
 
   <!-- Desktop Navigation -->
@@ -17,14 +17,14 @@ import CartIcon from '../assets/cart.svg';
     <a href="/galerie" class="nav-link">Galerie</a>
     <a href="/contact" class="nav-link">Contact</a>
     <a href="/cart" class="nav-link h-6 w-auto" aria-label="Coș de cumpărături">
-      <CartIcon />
+      <Cart />
     </a>
   </nav>
 
   <!-- Mobile Navigation -->
   <div class="flex items-center gap-6 lg:hidden">
     <a href="/cart" class="relative" aria-label="Coș de cumpărături">
-      <CartIcon class="h-6 w-auto" />
+      <Cart />
       <span class="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-600"></span>
     </a>
     <button

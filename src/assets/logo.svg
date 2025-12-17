@@ -1,13 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="158.758" height="30.394" viewBox="0 0 158.758 30.394">
-  <defs>
-    <clipPath id="clip-path">
-      <rect id="Rectangle_1" data-name="Rectangle 1" width="158.758" height="30.394" fill="none"/>
-    </clipPath>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 158.758 30.394" fill="currentColor">
   <g id="Group_3" data-name="Group 3" transform="translate(0 0)">
     <path id="Path_1" data-name="Path 1" d="M.209,33.034,12.848,21.786,0,10.3Z" transform="translate(0 -3.865)"/>
     <g id="Group_2" data-name="Group 2" transform="translate(0 0)">
-      <g id="Group_1" data-name="Group 1" clip-path="url(#clip-path)">
+      <g id="Group_1" data-name="Group 1" clip-path="url(#logo-clip-path)">
         <path id="Path_2" data-name="Path 2" d="M42.418,11.757a10.722,10.722,0,0,1,2.533,7.556V33.427H37.593V20.309a5.31,5.31,0,0,0-1.255-3.767A4.411,4.411,0,0,0,32.96,15.2a4.41,4.41,0,0,0-3.379,1.343,5.3,5.3,0,0,0-1.255,3.767V33.427h-7.4V9.267h7.4v3.2A7.822,7.822,0,0,1,31.357,9.94a9.648,9.648,0,0,1,4.286-.931,8.765,8.765,0,0,1,6.775,2.748" transform="translate(-7.848 -3.379)"/>
         <path id="Path_3" data-name="Path 3" d="M89.376,23.071H72.622a5.016,5.016,0,0,0,1.45,3.44A4.423,4.423,0,0,0,77.21,27.7a3.894,3.894,0,0,0,3.854-2.338h7.878a10.832,10.832,0,0,1-2.185,4.286A10.944,10.944,0,0,1,82.8,32.638a12.709,12.709,0,0,1-5.325,1.082,12.961,12.961,0,0,1-6.322-1.514,10.8,10.8,0,0,1-4.33-4.33,13.369,13.369,0,0,1-1.558-6.58A13.508,13.508,0,0,1,66.8,14.715a10.631,10.631,0,0,1,4.306-4.33,13.056,13.056,0,0,1,6.366-1.516,12.912,12.912,0,0,1,6.234,1.472,10.574,10.574,0,0,1,4.264,4.2,12.748,12.748,0,0,1,1.536,6.363,18.585,18.585,0,0,1-.129,2.165M81.93,18.957a3.806,3.806,0,0,0-1.3-3.031A4.779,4.779,0,0,0,77.384,14.8a4.692,4.692,0,0,0-3.138,1.082,4.8,4.8,0,0,0-1.58,3.075Z" transform="translate(-24.479 -3.327)"/>
         <path id="Path_4" data-name="Path 4" d="M123.1,33.582l-4.632-6.71-3.9,6.71h-8.009l7.965-12.339L106.348,9.423h8.312l4.632,6.668,3.9-6.668H131.2l-8.1,12.166,8.312,11.993Z" transform="translate(-39.89 -3.534)"/>
@@ -17,4 +12,9 @@
       </g>
     </g>
   </g>
+  <defs>
+    <clipPath id="logo-clip-path">
+      <rect width="158.758" height="30.394" fill="none"/>
+    </clipPath>
+  </defs>
 </svg>

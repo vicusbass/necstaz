@@ -79,11 +79,12 @@
     background-color: var(--color-gray-light);
   }
 
+  .hover\:darken:hover {
+     color: color-mix(in srgb, currentColor 70%, black 40%);
+  }
+  
   .bg-body {
     background-color: var(--color-bg-body);
   }
-
-  .hover-darken:hover {
-    color: color-mix(in srgb, currentColor 70%, black 30%);
-  }
 }
+
