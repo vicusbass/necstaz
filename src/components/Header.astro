@@ -1,21 +1,36 @@
 ---
 import Logo from '../assets/logo.svg';
 import Cart from '../assets/cart.svg';
+
+const currentPath = Astro.url.pathname;
 ---
 
 <header
-  class="absolute top-8 right-0 left-0 z-50 flex items-center justify-between px-6 py-6 lg:px-30"
+  class="fixed top-8 right-0 left-0 z-40 flex items-center justify-between px-6 py-6 lg:px-30"
 >
   <a href="/">
-    <Logo class="h-7 w-auto" />
+    <Logo class="h-8 w-auto" />
   </a>
 
   <!-- Desktop Navigation -->
-  <nav class="hidden items-center gap-18 lg:flex">
-    <a href="/" class="nav-link">Acasă</a>
-    <a href="/shop" class="nav-link">Shop</a>
-    <a href="/galerie" class="nav-link">Galerie</a>
-    <a href="/contact" class="nav-link">Contact</a>
+  <nav class="hidden items-center gap-18 text-xl lg:flex">
+    <a href="/" class:list={['nav-link', currentPath === '/' && 'underline underline-offset-6']}
+      >Acasă</a
+    >
+    <a
+      href="/shop"
+      class:list={['nav-link', currentPath === '/shop' && 'underline underline-offset-6']}>Shop</a
+    >
+    <a
+      href="/galerie"
+      class:list={['nav-link', currentPath === '/galerie' && 'underline underline-offset-6']}
+      >Galerie</a
+    >
+    <a
+      href="/contact"
+      class:list={['nav-link', currentPath === '/contact' && 'underline underline-offset-6']}
+      >Contact</a
+    >
     <a href="/cart" class="nav-link h-6 w-auto" aria-label="Coș de cumpărături">
       <Cart />
     </a>
@@ -24,23 +39,140 @@ import Cart from '../assets/cart.svg';
   <!-- Mobile Navigation -->
   <div class="flex items-center gap-6 lg:hidden">
     <a href="/cart" class="relative" aria-label="Coș de cumpărături">
-      <Cart />
+      <Cart class="h-6" />
       <span class="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-600"></span>
     </a>
-    <button
-      class="mobile-menu-toggle flex h-10 w-10 flex-col items-center justify-center gap-1 bg-black"
-      aria-label="Meniu"
-      aria-expanded="false"
-    >
-      <span class="block h-0.5 w-5 bg-white"></span>
-      <span class="block h-0.5 w-5 bg-white"></span>
-      <span class="block h-0.5 w-5 bg-white"></span>
-    </button>
+    <div class="h-8 w-8"></div>
   </div>
 </header>
 
+<button
+  id="mobile-menu-button"
+  class="fixed top-14 right-6 z-60 flex h-8 w-8 items-center justify-center bg-black transition-colors duration-300 ease-in-out lg:hidden"
+  aria-label="Meniu"
+  aria-expanded="false"
+>
+  <span class="menu-line menu-line-top absolute block h-0.5 w-4 bg-white"></span>
+  <span class="menu-line menu-line-middle absolute block h-0.5 w-4 bg-white"></span>
+  <span class="menu-line menu-line-bottom absolute block h-0.5 w-4 bg-white"></span>
+</button>
+
+<!-- Mobile Menu Modal -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-50 bg-black text-white"
+  style="transform: scale(0); pointer-events: none;"
+  aria-hidden="true"
+>
+  <nav class="mt-16 flex h-full flex-col gap-6 px-6 py-8 text-5xl font-bold">
+    <a href="/" class:list={['mobile-nav-link', currentPath === '/' && 'text-highlight']}>▸acasă</a>
+    <a href="/shop" class:list={['mobile-nav-link', currentPath === '/shop' && 'text-highlight']}
+      >▸shop</a
+    >
+    <a
+      href="/galerie"
+      class:list={['mobile-nav-link', currentPath === '/galerie' && 'text-highlight']}>▸galerie</a
+    >
+    <a
+      href="/contact"
+      class:list={['mobile-nav-link', currentPath === '/contact' && 'text-highlight']}>▸contact</a
+    >
+    <a href="/cart" class:list={['mobile-nav-link', currentPath === '/cart' && 'text-highlight']}
+      >▸coșul meu</a
+    >
+  </nav>
+</div>
+
 <style>
-  .mobile-menu-toggle span {
-    transition: all 0.3s ease;
+  #mobile-menu {
+    transform-origin: calc(100% - 1.5rem) 4rem;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #mobile-menu.show {
+    transform: scale(1) !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-nav-link {
+    transition: transform 0.2s ease;
+  }
+
+  .mobile-nav-link:hover {
+    transform: translateX(8px);
+  }
+
+  .menu-line {
+    transition: all 0.3s ease-in-out;
+    transform-origin: center;
+  }
+
+  .menu-line-top {
+    transform: translateY(-4px);
+  }
+
+  .menu-line-bottom {
+    transform: translateY(4px);
+  }
+
+  #mobile-menu-button.open .menu-line-top {
+    transform: rotate(45deg);
+    background-color: black;
+  }
+
+  #mobile-menu-button.open .menu-line-middle {
+    opacity: 0;
+  }
+
+  #mobile-menu-button.open .menu-line-bottom {
+    transform: rotate(-45deg);
+    background-color: black;
   }
 </style>
+
+<script>
+  function initMenu() {
+    const menuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (!menuButton || !mobileMenu) return;
+
+    // Reset menu state on page load
+    closeMenu();
+
+    function closeMenu() {
+      if (!mobileMenu) return;
+
+      mobileMenu.classList.remove('show');
+      menuButton.classList.remove('bg-highlight', 'open');
+      menuButton.setAttribute('aria-expanded', 'false');
+      mobileMenu.setAttribute('aria-hidden', 'true');
+    }
+
+    function openMenu() {
+      mobileMenu?.classList.add('show');
+      menuButton?.classList.add('bg-highlight', 'open');
+      menuButton?.setAttribute('aria-expanded', 'true');
+      mobileMenu?.setAttribute('aria-hidden', 'false');
+    }
+
+    function toggleMenu() {
+      if (!mobileMenu) return;
+
+      const isOpen = mobileMenu?.classList.contains('show');
+      if (!isOpen) {
+        mobileMenu.style.pointerEvents = 'none';
+        // Trigger reflow to ensure transition works
+        requestAnimationFrame(openMenu);
+      } else closeMenu();
+    }
+
+    menuButton.addEventListener('click', toggleMenu);
+  }
+
+  // Initialize on page load
+  initMenu();
+
+  // Re-initialize after navigation (for client-side routing)
+  document.addEventListener('astro:after-swap', initMenu);
+</script>
