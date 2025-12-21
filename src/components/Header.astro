@@ -92,9 +92,18 @@ const currentPath = Astro.url.pathname;
   }
 
   #main-header.scrolled {
-    background: rgba(0, 0, 0, 0.12);
+    top: 0;
+    background: rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+  }
+
+  #mobile-menu-button {
+    transition: top 0.3s ease;
+  }
+
+  #mobile-menu-button.scrolled {
+    top: 1.5rem;
   }
 
   #mobile-menu {
@@ -146,6 +155,7 @@ const currentPath = Astro.url.pathname;
 <script>
   function initHeaderScroll() {
     const header = document.getElementById('main-header');
+    const menuButton = document.getElementById('mobile-menu-button');
     if (!header) return;
 
     const scrollThreshold = 50;
@@ -153,8 +163,10 @@ const currentPath = Astro.url.pathname;
     function handleScroll() {
       if (window.scrollY > scrollThreshold) {
         header?.classList.add('scrolled');
+        menuButton?.classList.add('scrolled');
       } else {
         header?.classList.remove('scrolled');
+        menuButton?.classList.remove('scrolled');
       }
     }
 
