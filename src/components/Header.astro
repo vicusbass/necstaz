@@ -6,7 +6,8 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header
-  class="fixed top-8 right-0 left-0 z-40 flex items-center justify-between px-6 py-6 lg:px-30"
+  id="main-header"
+  class="z-header fixed top-8 right-0 left-0 flex items-center justify-between px-6 py-6 transition-all duration-300 lg:px-30"
 >
   <a href="/">
     <Logo class="h-8 w-auto" />
@@ -48,7 +49,7 @@ const currentPath = Astro.url.pathname;
 
 <button
   id="mobile-menu-button"
-  class="fixed top-14 right-6 z-60 flex h-8 w-8 items-center justify-center bg-black transition-colors duration-300 ease-in-out lg:hidden"
+  class="z-mobile-menu-btn fixed top-14 right-6 flex h-8 w-8 items-center justify-center bg-black transition-colors duration-300 ease-in-out lg:hidden"
   aria-label="Meniu"
   aria-expanded="false"
 >
@@ -60,7 +61,7 @@ const currentPath = Astro.url.pathname;
 <!-- Mobile Menu Modal -->
 <div
   id="mobile-menu"
-  class="fixed inset-0 z-50 bg-black text-white"
+  class="z-mobile-menu fixed inset-0 bg-black text-white"
   style="transform: scale(0); pointer-events: none;"
   aria-hidden="true"
 >
@@ -84,6 +85,18 @@ const currentPath = Astro.url.pathname;
 </div>
 
 <style>
+  #main-header {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  #main-header.scrolled {
+    background: rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
   #mobile-menu {
     transform-origin: calc(100% - 1.5rem) 4rem;
     transition: transform 0.3s ease-in-out;
@@ -131,6 +144,24 @@ const currentPath = Astro.url.pathname;
 </style>
 
 <script>
+  function initHeaderScroll() {
+    const header = document.getElementById('main-header');
+    if (!header) return;
+
+    const scrollThreshold = 50;
+
+    function handleScroll() {
+      if (window.scrollY > scrollThreshold) {
+        header?.classList.add('scrolled');
+      } else {
+        header?.classList.remove('scrolled');
+      }
+    }
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
   function initMenu() {
     const menuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
@@ -144,8 +175,8 @@ const currentPath = Astro.url.pathname;
       if (!mobileMenu) return;
 
       mobileMenu.classList.remove('show');
-      menuButton.classList.remove('bg-highlight', 'open');
-      menuButton.setAttribute('aria-expanded', 'false');
+      menuButton?.classList.remove('bg-highlight', 'open');
+      menuButton?.setAttribute('aria-expanded', 'false');
       mobileMenu.setAttribute('aria-hidden', 'true');
     }
 
@@ -162,7 +193,6 @@ const currentPath = Astro.url.pathname;
       const isOpen = mobileMenu?.classList.contains('show');
       if (!isOpen) {
         mobileMenu.style.pointerEvents = 'none';
-        // Trigger reflow to ensure transition works
         requestAnimationFrame(openMenu);
       } else closeMenu();
     }
@@ -170,9 +200,8 @@ const currentPath = Astro.url.pathname;
     menuButton.addEventListener('click', toggleMenu);
   }
 
-  // Initialize on page load
-  initMenu();
-
-  // Re-initialize after navigation (for client-side routing)
-  document.addEventListener('astro:after-swap', initMenu);
+  document.addEventListener('astro:page-load', () => {
+    initMenu();
+    initHeaderScroll();
+  });
 </script>

@@ -11,6 +11,12 @@
   --color-highlight: #e6c46c;
 
   --font-body: 'Red Hat Display Variable', sans-serif;
+
+  /* Z-index scale */
+  --z-elevated: 10;
+  --z-header: 50;
+  --z-mobile-menu: 60;
+  --z-mobile-menu-btn: 70;
 }
 
 /* ============================================
@@ -64,6 +70,23 @@
    Utilities - Custom utility classes
    ============================================ */
 @layer utilities {
+  /* Z-index utilities */
+  .z-elevated {
+    z-index: var(--z-elevated);
+  }
+
+  .z-header {
+    z-index: var(--z-header);
+  }
+
+  .z-mobile-menu {
+    z-index: var(--z-mobile-menu);
+  }
+
+  .z-mobile-menu-btn {
+    z-index: var(--z-mobile-menu-btn);
+  }
+
   .font-body {
     font-family: var(--font-body);
   }
