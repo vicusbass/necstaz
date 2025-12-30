@@ -8,6 +8,7 @@
   --color-gray: #909090;
   --color-gray-light: #f2f2f2;
   --color-gray-lighter: #f8f8f8;
+  --color-gray-dark: #6e6e6e;
   --color-bg-body: #0000000d;
   --color-highlight: #e6c46c;
 
@@ -98,6 +99,10 @@
 
   .text-gray {
     color: var(--color-gray);
+  }
+
+  .text-gray-dark {
+    color: var(--color-gray-dark);
   }
 
   .bg-highlight {

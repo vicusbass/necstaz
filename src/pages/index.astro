@@ -3,9 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import allWines from '../assets/all-wines.png';
 import allWinesMobile from '../assets/all-wines-mobile.png';
+import gallerySample from '../assets/gallery-sample.png';
 import glass from '../assets/glass.svg';
 import leaf from '../assets/leaf.svg';
 import hexagon from '../assets/hexagon.svg';
+import lemonFlavour from '../assets/lemon-flavour.svg';
+import flower from '../assets/flower.svg';
+import culinarySign from '../assets/culinary-sign.svg';
 import { MuxPlayer } from '@mux/mux-player-astro';
 import bottleAlb from '../assets/bottle-alb-demisec.png';
 import bottleRosu from '../assets/bottle-rosu-sec.png';
@@ -80,7 +84,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
             title: 'Nextaz Rosé',
             description:
               'Aromă delicată de trandafir și fructe roșii, un rosé elegant, iubit pentru prospețime și culoare.',
-            aromatic: ['Trandafir', 'Busuioc', 'Cireșe', 'Căpșuni', 'Grapefruit', 'Măr glazurat'],
+            flavours: ['Trandafir', 'Busuioc', 'Cireșe', 'Căpșuni', 'Grapefruit', 'Măr glazurat'],
             organoleptic: [
               'Busuioacă de Bohotin demisec, intens aromatică',
               'Culoare rosé somon / cireașă, strălucitoare',
@@ -104,7 +108,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
             title: 'Nextaz Alb',
             description:
               'Un vin alb răcoritor, cu note fructate și citrice, perfect pentru mese lejere sau ieșiri de weekend.',
-            aromatic: ['Lămâie', 'Grapefruit', 'Mere verzi', 'Flori albe', 'Mentă'],
+            flavours: ['Lămâie', 'Grapefruit', 'Mere verzi', 'Flori albe', 'Mentă'],
             organoleptic: [
               'Vin alb demisec, fresh și echilibrat',
               'Culoare galben-pai strălucitoare',
@@ -128,7 +132,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
             title: 'Nextaz Roșu',
             description:
               'Fetească Neagră matură, catifelată, cu note de ciocolată neagră și prune uscate.',
-            aromatic: ['Ciocolată neagră', 'Prune uscate', 'Vișine', 'Condimente', 'Vanilie'],
+            flavours: ['Ciocolată neagră', 'Prune uscate', 'Vișine', 'Condimente', 'Vanilie'],
             organoleptic: [
               'Vin roșu sec, corpulent și elegant',
               'Culoare roșu-rubinu intens',
@@ -152,7 +156,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
             title: 'Nextaz Spumant',
             description:
               'Un spumant vibrant, cu note de măr verde și citrice, potrivit pentru orice moment spontan.',
-            aromatic: ['Măr verde', 'Citrice', 'Pâine prăjită', 'Flori albe', 'Miere'],
+            flavours: ['Măr verde', 'Citrice', 'Pâine prăjită', 'Flori albe', 'Miere'],
             organoleptic: [
               'Spumant demisec, elegant și persistent',
               'Culoare galben-pai cu reflexe verzi',
@@ -169,31 +173,85 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
               'Deserturi: fructe proaspete, prăjituri ușoare',
             ],
           },
-        ].map(({ id, image, title, description, aromatic, organoleptic, culinary }) => (
+        ].map(({ id, image, title, description, flavours, organoleptic, culinary }) => (
           <div
             data-wine-id={id}
-            class="wine-cell group bg-gray-light hover:bg-gray-lighter flex aspect-auto w-full cursor-pointer overflow-hidden border border-white transition-all duration-300 lg:aspect-square lg:w-1/2"
+            class="wine-cell group bg-gray-light hover:bg-gray-lighter aria-expanded:hover:bg-gray-light flex aspect-auto w-full cursor-pointer overflow-hidden border border-white transition-all duration-500 lg:aspect-square lg:w-1/2"
             aria-expanded="false"
           >
-            <div class="flex h-full w-full flex-col px-8 py-12">
-              <div class="flex h-full flex-col items-center justify-between group-aria-expanded:h-90 group-aria-expanded:w-[30%]">
-                <Image
-                  src={image}
-                  alt={title}
-                  class="h-auto w-70 transition-transform duration-300 group-hover:scale-115 lg:w-[20vw]"
-                  loading="eager"
-                />
-                <h3 class="mb-2 text-center text-3xl font-bold">{title}</h3>
-                <p class="mb-2 max-w-sm text-center text-xl">{description}</p>
-                <button class="text-gray text-base underline transition-all duration-300 group-hover:scale-115 group-hover:text-black group-aria-expanded:hidden">
-                  Vezi detalii
-                </button>
-                <a
-                  href="/shop"
-                  class="btn-add-to-cart hidden text-lg group-aria-expanded:block lg:text-2xl"
-                >
-                  Comandă
-                </a>
+            <div class="flex h-full w-full flex-col px-[1.7vw] py-[2.5vw]">
+              <div class="flex h-full flex-col lg:flex-row">
+                <div class="flex h-[50vw] w-full flex-col items-center justify-between transition-all duration-500">
+                  <Image
+                    src={image}
+                    alt={title}
+                    class="h-auto w-70 transition-transform duration-500 group-hover:scale-115 group-aria-expanded:group-hover:scale-100 lg:w-[20vw]"
+                    loading="eager"
+                  />
+                  <h3 class="mb-2 text-center text-3xl font-bold">{title}</h3>
+                  <p class="mb-2 max-w-sm text-center text-xl">{description}</p>
+                  <button class="text-gray group-aria-expanded:group-hover:text-gray text-base underline transition-all duration-500 group-hover:scale-115 group-hover:text-black group-aria-expanded:scale-0 group-aria-expanded:opacity-0 group-aria-expanded:hover:scale-0">
+                    Vezi detalii
+                  </button>
+                  <a
+                    href="/shop"
+                    class="btn-add-to-cart scale-0 text-lg opacity-0 transition-all duration-500 group-aria-expanded:scale-100 group-aria-expanded:opacity-100 lg:text-2xl"
+                  >
+                    Comandă
+                  </a>
+                </div>
+                <div class="flex h-[0%] w-[0%] flex-col gap-[4.5vw] overflow-hidden transition-all duration-500 group-aria-expanded:h-full group-aria-expanded:w-[250%]">
+                  <div class="mt-[2.5vw] flex flex-col gap-[4.5vw] lg:mt-[5vw] lg:flex-row">
+                    <div>
+                      <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                        <Image src={lemonFlavour} alt="Profil aromatic" class="mr-3" />
+                        Profil aromatic
+                      </h4>
+                      <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                        {flavours.map((flavour) => (
+                          <li>{flavour}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                        <Image src={flower} alt="Caracteristici organoleptice" class="mx-6 my-4" />
+                        Caracteristici organoleptice
+                      </h4>
+                      <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                        {organoleptic.map((item) => (
+                          <li>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                      <Image src={culinarySign} alt="Recomandări culinare" class="mx-5 my-5" />
+                      Recomandări culinare
+                    </h4>
+                    <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                      {culinary.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="h-[0%] w-[0%] overflow-hidden transition-all duration-500 group-aria-expanded:h-full group-aria-expanded:w-full">
+                <div class="p-[4vw]">
+                  <h4 class="text-center text-3xl font-bold">Galerie</h4>
+                  <div class="mt-23 flex justify-center gap-18 overflow-auto">
+                    {[gallerySample, gallerySample, gallerySample, gallerySample].map((image) => (
+                      <Image
+                        src={image}
+                        alt="Gallery Sample"
+                        class="h-148 w-88 object-cover"
+                        loading="eager"
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -254,25 +312,20 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
         expandedCell = cell;
 
         setTimeout(() => {
-          container.scrollIntoView({
+          const headerOffset = 80; // Adjust this value for your header height
+          const containerTop = container.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: containerTop - headerOffset,
             behavior: 'smooth',
-            block: 'start',
           });
         });
       });
     });
 
     function expandCell(cell: HTMLElement, otherCells: HTMLElement[]) {
-      // if (simpleContent) simpleContent.style.display = 'none';
-      // if (modalContent) modalContent.classList.remove('hidden');
       cell.setAttribute('aria-expanded', 'true');
 
-      if (window.innerWidth < 1024) {
-        // cell.classList.remove('aspect-square');
-        // cell.classList.add('h-auto');
-      } else {
-        cell.classList.remove('lg:w-1/2');
-      }
+      cell.classList.remove('lg:w-1/2');
 
       requestAnimationFrame(() => {
         otherCells.forEach((otherCell) => {
@@ -284,12 +337,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
     }
 
     function collapseCell(cell: Element, otherCells: HTMLElement[]) {
-      if (window.innerWidth < 1024) {
-        // cell.classList.add('aspect-square');
-        // cell.classList.remove('h-auto');
-      } else {
-        cell.classList.add('lg:w-1/2');
-      }
+      cell.classList.add('lg:w-1/2');
 
       otherCells.forEach((otherCell) => {
         otherCell.style.opacity = '1';
@@ -297,9 +345,7 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
         otherCell.style.removeProperty('height');
       });
 
-      setTimeout(() => {
-        cell.setAttribute('aria-expanded', 'false');
-      }, 300);
+      cell.setAttribute('aria-expanded', 'false');
     }
   }
 
