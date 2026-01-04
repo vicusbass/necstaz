@@ -1,5 +1,5 @@
 import type {StructureResolver} from 'sanity/structure'
-import {BasketIcon} from '@sanity/icons'
+import {BasketIcon, ImagesIcon} from '@sanity/icons'
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -11,10 +11,16 @@ export const structure: StructureResolver = (S) =>
         .icon(BasketIcon)
         .child(S.document().schemaType('shop').documentId('shop')),
 
+      // Gallery singleton
+      S.listItem()
+        .title('Galerie')
+        .icon(ImagesIcon)
+        .child(S.document().schemaType('galleryPage').documentId('galleryPage')),
+
       S.divider(),
 
       // Products list
       ...S.documentTypeListItems().filter(
-        (listItem) => !['shop'].includes(listItem.getId() ?? '')
+        (listItem) => !['shop', 'galleryPage'].includes(listItem.getId() ?? '')
       ),
     ])

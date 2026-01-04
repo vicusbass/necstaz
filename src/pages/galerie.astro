@@ -1,0 +1,107 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { loadQuery } from '../utils/loadQuery';
+import { galleryQuery } from '../queries/gallery';
+import { categorizeGalleryImages, layoutGalleryImages } from '../utils/gallery';
+import type { GalleryImage } from '../utils/gallery';
+import heroDesktop from '../assets/gallery/hero.png';
+import heroMobile from '../assets/gallery/hero-mobile.jpg';
+import { Image } from 'astro:assets';
+
+const { data } = await loadQuery<{ images: GalleryImage[] }>({
+  query: galleryQuery,
+});
+
+const categorized = data?.images ? categorizeGalleryImages(data.images) : [];
+const { desktop, mobile } = layoutGalleryImages(categorized);
+---
+
+<Layout title="Galerie | Nextaz">
+  <!-- Hero Section - Desktop -->
+  <section id="gallery-hero" class="relative hidden overflow-hidden lg:block">
+    <Image
+      src={heroDesktop}
+      alt="Galerie Nextaz"
+      class="w-full -translate-x-[5%] -translate-y-[15%] scale-130"
+    />
+    <!-- Text Overlay - Desktop -->
+    <div class="absolute inset-0 flex flex-col items-start justify-center px-30 pt-[12%] text-left">
+      <h1 class="mb-4 text-5xl leading-none font-bold lg:mb-12 lg:text-9xl">Galerie</h1>
+      <h2 class="mb-6 text-2xl leading-none font-bold lg:text-5xl">Momentele tale cu Nextaz</h2>
+      <p
+        class="text-gray-dark mb-50 max-w-[600px] px-6 text-lg leading-relaxed lg:px-0 lg:text-xl lg:text-black"
+      >
+        Explorează universul Nextaz - de la fotografii de produs la momente surprinse în evenimente,
+        seri tematice și petreceri.
+      </p>
+    </div>
+  </section>
+
+  <!-- Hero Section - Mobile -->
+  <section class="relative lg:hidden">
+    <Image src={heroMobile} alt="Galerie Nextaz" class="h-auto w-full object-cover" />
+    <!-- Text Overlay - Mobile (positioned below wines) -->
+    <div class="absolute inset-0 flex flex-col items-center justify-end px-6 pb-50 text-center">
+      <h1 class="mb-4 text-6xl leading-none font-bold">Galerie</h1>
+      <h2 class="mb-4 max-w-[75%] text-3xl leading-tight font-bold">Momentele tale cu Nextaz</h2>
+      <p class="text-gray-dark max-w-[75%] text-sm leading-relaxed">
+        Explorează universul Nextaz - de la fotografii de produs la momente surprinse în evenimente,
+        seri tematice și petreceri.
+      </p>
+    </div>
+  </section>
+
+  <!-- Gallery Grid -->
+  <section class="container mx-auto px-4 pb-8 lg:px-30 lg:pb-16">
+    <!-- Desktop -->
+    <div class="hidden gap-4 lg:grid lg:grid-cols-2">
+      {
+        desktop.map((item, index) => {
+          // First row: if first item is rectangle (full width), only index 0 overlaps
+          // If first item is square, both index 0 and 1 overlap
+          const firstIsRectangle = desktop[0]?.isRectangle;
+          const isFirstRow = firstIsRectangle ? index === 0 : index < 2;
+
+          return (
+            <div
+              class={`${item.isRectangle ? 'col-span-2' : 'col-span-1'} ${isFirstRow ? 'z-elevated relative lg:-mt-16' : ''}`}
+            >
+              <Image
+                src={item.image.asset.url}
+                alt={item.image.alt}
+                width={item.image.asset.metadata.dimensions.width}
+                height={item.image.asset.metadata.dimensions.height}
+                class={
+                  item.isRectangle
+                    ? 'h-auto w-full object-cover'
+                    : 'aspect-square w-full object-cover'
+                }
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          );
+        })
+      }
+    </div>
+
+    <!-- Mobile Layout -->
+    <div class="grid grid-cols-1 gap-4 lg:hidden">
+      {
+        mobile.map((item, index) => (
+          <div class={index === 0 ? 'z-elevated relative -mt-12' : ''}>
+            <Image
+              src={item.image.asset.url}
+              alt={item.image.alt}
+              width={item.image.asset.metadata.dimensions.width}
+              height={item.image.asset.metadata.dimensions.height}
+              class="aspect-square w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Layout>
