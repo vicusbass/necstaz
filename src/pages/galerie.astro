@@ -38,53 +38,64 @@ const { desktop, mobile } = layoutGalleryImages(categorized);
   </section>
 
   <!-- Hero Section - Mobile -->
-  <section class="lg:hidden">
+  <section class="relative lg:hidden">
     <Image src={heroMobile} alt="Galerie Nextaz" class="h-auto w-full object-cover" />
-    <!-- Text Below Hero - Mobile -->
-    <div class="flex flex-col items-center px-6 py-8 text-center">
-      <h1 class="mb-4 text-5xl leading-none font-bold text-black">Galerie</h1>
-      <h2 class="mb-4 text-xl leading-tight font-bold text-black">Momentele tale cu Nextaz</h2>
-      <p class="text-gray-dark max-w-[350px] text-sm leading-relaxed">
-        Explorează universul Nextaz – de la fotografii de produs la momente surprinse în evenimente,
+    <!-- Text Overlay - Mobile (positioned below wines) -->
+    <div class="absolute inset-0 flex flex-col items-center justify-end px-6 pb-50 text-center">
+      <h1 class="mb-4 text-6xl leading-none font-bold">Galerie</h1>
+      <h2 class="mb-4 max-w-[75%] text-3xl leading-tight font-bold">Momentele tale cu Nextaz</h2>
+      <p class="text-gray-dark max-w-[75%] text-sm leading-relaxed">
+        Explorează universul Nextaz - de la fotografii de produs la momente surprinse în evenimente,
         seri tematice și petreceri.
       </p>
     </div>
   </section>
 
   <!-- Gallery Grid -->
-  <section class="container mx-auto px-4 py-8 lg:py-16">
+  <section class="container mx-auto px-4 pb-8 lg:px-30 lg:pb-16">
     <!-- Desktop Layout -->
     <div class="hidden gap-4 lg:grid lg:grid-cols-2">
       {
-        desktop.map((item) => (
-          <div class={item.isRectangle ? 'col-span-2' : 'col-span-1'}>
-            <img
-              src={item.image.asset.url}
-              alt={item.image.alt}
-              class={
-                item.isRectangle
-                  ? 'h-auto w-full object-cover'
-                  : 'aspect-square w-full object-cover'
-              }
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-        ))
+        desktop.map((item, index) => {
+          // First row: if first item is rectangle (full width), only index 0 overlaps
+          // If first item is square, both index 0 and 1 overlap
+          const firstIsRectangle = desktop[0]?.isRectangle;
+          const isFirstRow = firstIsRectangle ? index === 0 : index < 2;
+
+          return (
+            <div
+              class={`${item.isRectangle ? 'col-span-2' : 'col-span-1'} ${isFirstRow ? 'z-elevated relative lg:-mt-16' : ''}`}
+            >
+              <img
+                src={item.image.asset.url}
+                alt={item.image.alt}
+                class={
+                  item.isRectangle
+                    ? 'h-auto w-full object-cover'
+                    : 'aspect-square w-full object-cover'
+                }
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          );
+        })
       }
     </div>
 
     <!-- Mobile Layout -->
     <div class="grid grid-cols-1 gap-4 lg:hidden">
       {
-        mobile.map((item) => (
-          <img
-            src={item.image.asset.url}
-            alt={item.image.alt}
-            class="aspect-square w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
+        mobile.map((item, index) => (
+          <div class={index === 0 ? 'z-elevated relative -mt-12' : ''}>
+            <img
+              src={item.image.asset.url}
+              alt={item.image.alt}
+              class="aspect-square w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
         ))
       }
     </div>

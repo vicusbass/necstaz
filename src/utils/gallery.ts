@@ -40,8 +40,10 @@ export function categorizeGalleryImages(images: GalleryImage[]): CategorizedImag
 }
 
 export function layoutGalleryImages(images: CategorizedImage[]) {
+  // Desktop: all images except mobile-only
   const desktop = images.filter((img) => !img.mobileOnly)
-  const mobile = images // All images including mobile-only
+  // Mobile: only squares and mobile-only images (no rectangles unless tagged mobile-only)
+  const mobile = images.filter((img) => img.isSquare || img.mobileOnly)
 
   return {desktop, mobile}
 }
