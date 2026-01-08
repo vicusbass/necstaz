@@ -3,10 +3,20 @@ import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import allWines from '../assets/all-wines.png';
 import allWinesMobile from '../assets/all-wines-mobile.png';
+import gallerySample from '../assets/gallery-sample.png';
 import glass from '../assets/glass.svg';
 import leaf from '../assets/leaf.svg';
 import hexagon from '../assets/hexagon.svg';
+import lemonFlavour from '../assets/lemon-flavour.svg';
+import close from '../assets/close.svg';
+import arrowUp from '../assets/arrow-up.svg';
+import flower from '../assets/flower.svg';
+import culinarySign from '../assets/culinary-sign.svg';
 import { MuxPlayer } from '@mux/mux-player-astro';
+import bottleAlb from '../assets/bottle-alb-demisec.png';
+import bottleRosu from '../assets/bottle-rosu-sec.png';
+import bottleRoze from '../assets/bottle-roze-demisec.png';
+import bottleSpumant from '../assets/bottle-spumant-demisec.png';
 ---
 
 <Layout title="Nextaz">
@@ -15,7 +25,7 @@ import { MuxPlayer } from '@mux/mux-player-astro';
       <source media="(min-width: 1024px)" srcset={allWines.src} />
       <Image src={allWinesMobile} class="w-full object-cover" loading="eager" alt="All Wines" />
     </picture>
-    <div class="flex w-full flex-col items-center py-18 lg:flex-row lg:justify-evenly lg:py-9">
+    <div class="flex w-full flex-col items-center py-18 lg:flex-row lg:justify-evenly lg:py-40">
       <div class="flex">
         <div
           class="h-[36vw] max-h-175 min-h-88 w-[25vw] max-w-105 min-w-53 lg:min-h-116 lg:min-w-70"
@@ -66,6 +76,296 @@ import { MuxPlayer } from '@mux/mux-player-astro';
         }
       </div>
     </div>
+    <h2 class="mb-30 text-[3.25rem] font-bold">Gama Nextaz</h2>
+    <div class="wine-cells-container relative flex w-full flex-row flex-wrap">
+      {
+        [
+          {
+            id: 'roze',
+            image: bottleRoze,
+            title: 'Nextaz Rosé',
+            description:
+              'Aromă delicată de trandafir și fructe roșii, un rosé elegant, iubit pentru prospețime și culoare.',
+            flavours: ['Trandafir', 'Busuioc', 'Cireșe', 'Căpșuni', 'Grapefruit', 'Măr glazurat'],
+            organoleptic: [
+              'Busuioacă de Bohotin demisec, intens aromatică',
+              'Culoare rosé somon / cireașă, strălucitoare',
+              'Textură delicată, fină, crocantă',
+              'Aciditate ridicată, bine integrată',
+              'Durată de viață: 3-5 ani',
+              'După deschidere: până la 1 săptămână la frigider',
+              'Temperatura de servire: 8-10°C',
+            ],
+            culinary: [
+              'Aperitive: bruschete cu roșii și busuioc, spring rolls, jamón, chorizo ',
+              'Preparate principale: mâncăruri asiatice condimentate sau picante, fructe de mare, paella, piept de rață cu sos de smochine, aripioare de pui picante ',
+              'Carne & pește: porc cu sosuri dulci sau caramelizate, păstrăv, crap ',
+              'Legume & garnituri: cartof dulce, dovleac copt cu scorțișoară, alte legume cu dulceață naturală ',
+              'Alături de gustări reci: platouri cu fructe de vară, măsline marinate și salate fresh cu dressing ușor.',
+            ],
+          },
+          {
+            id: 'alb',
+            image: bottleAlb,
+            title: 'Nextaz Alb',
+            description:
+              'Un vin alb răcoritor, cu note fructate și citrice, perfect pentru mese lejere sau ieșiri de weekend.',
+            flavours: ['Citrice (lămâie)','Piersici albe', 'Agrișe', 'Fân proaspăt cosit'],
+            organoleptic: [
+              'Vin alb demisec, luminos și răcoritor',
+              'Culoare galben-verzuie, strălucitoare',
+              'Note reținute în nas, cu ușoare urme de baricare',
+              'Textură catifelată, postgust ușor amărui',
+              'Durată de viață: aproximativ 3 ani',
+              'După deschidere: până la 1 săptămână la frigider',
+              'Nivel ridicat de sulfiți - se recomandă aerisirea câteva minute înainte de servire',
+              'Temperatura de servire: 8-10°C',
+            ],
+            culinary: [
+              'Aperitive și gustări de vară: brânză de capră, somon afumat, salată de icre, sparanghel, salate de sezon, humus, guacamole',
+              'Preparate principale: pui teriyaki, cordon bleu, porc la cuptor, pește la grătar sau la cuptor, creveți sote, paste cu fructe de mare, risotto cu ciuperci sau sparanghel',
+              'Bucătării internaționale: Thai curry, Pad Thai, curry indian',
+              'Deserturi: plăcintă cu mere, tartă cu pere, salată de fructe de sezon',
+            ],
+          },
+          {
+            id: 'rosu',
+            image: bottleRosu,
+            title: 'Nextaz Roșu',
+            description:
+              'Fetească Neagră matură, catifelată, cu note de ciocolată neagră și prune uscate.',
+            flavours: ['Coacăze', 'Prune uscate', 'Tutun', 'Marțipan', 'Ciocolată neagră', 'Vanilină'],
+            organoleptic: [
+              'Fetească Neagră sec, maturată la baric',
+              'Culoare roșu purpuriu, cu reflexii cărămizii',
+              'Taninuri catifelate, astringență medie',
+              'Corpolență medie spre mare, bogată în extract sec',
+              'Durată de viață: 7-10 ani',
+              'După deschidere: până la 2 săptămâni la frigider',
+              'Temperatura de servire: 16°C',
+              'Nu necesită decantare, dar poate fi aerată ușor înainte de servire'
+            ],
+            culinary: [
+              'Aperitive: brânzeturi mature, salamuri - TODO',
+              'Preparate principale: friptură, miel, vânat - TODO',
+              'Paste cu sos de roșii, ragu - TODO',
+              'Legume la grătar, ciuperci - TODO',
+              'Deserturi: ciocolată neagră - TODO',
+            ],
+          },
+          {
+            id: 'spumant',
+            image: bottleSpumant,
+            title: 'Nextaz Spumant',
+            description:
+              'Un spumant vibrant, cu note de măr verde și citrice, potrivit pentru orice moment spontan.',
+            flavours: ['Măr verde', 'Citrice', 'Pâine prăjită', 'Flori albe', 'Miere'],
+            organoleptic: [
+              'Spumant demisec, elegant și persistent',
+              'Culoare galben-pai cu reflexe verzi',
+              'Perlaj fin și persistent',
+              'Aciditate vie, echilibrată',
+              'Durată de viață: 2-3 ani',
+              'Perfect pentru celebrări și aperitive',
+              'Temperatura de servire: 6-8°C',
+            ],
+            culinary: [
+              'Aperitive: caviar, somon afumat, oysters',
+              'Preparate: fructe de mare, sushi',
+              'Salate: salate sofisticate cu dressing ușor',
+              'Deserturi: fructe proaspete, prăjituri ușoare',
+            ],
+          },
+        ].map(({ id, image, title, description, flavours, organoleptic, culinary }) => (
+          <div
+            data-wine-id={id}
+            class="wine-cell group bg-gray-light hover:bg-gray-lighter aria-expanded:hover:bg-gray-light hidden aspect-auto w-full cursor-pointer overflow-hidden border border-white transition-all duration-500 lg:flex lg:aspect-square lg:w-1/2"
+            aria-expanded="false"
+          >
+            <div class="flex h-full w-full flex-col px-[1.7vw] py-[2.5vw]">
+              <div class="flex h-full flex-col lg:flex-row">
+                <div class="flex h-[50vw] w-full flex-col items-center justify-between transition-all duration-500">
+                  <Image
+                    src={image}
+                    alt={title}
+                    class="h-auto w-70 transition-transform duration-500 group-hover:scale-115 group-aria-expanded:group-hover:scale-100 lg:w-[20vw]"
+                    loading="eager"
+                  />
+                  <h3 class="mb-2 text-center text-3xl font-bold">{title}</h3>
+                  <p class="mb-2 max-w-sm text-center text-xl">{description}</p>
+                  <button class="text-gray group-aria-expanded:group-hover:text-gray text-base underline transition-all duration-500 group-hover:scale-115 group-hover:text-black group-aria-expanded:scale-0 group-aria-expanded:opacity-0 group-aria-expanded:hover:scale-0">
+                    Vezi detalii
+                  </button>
+                  <a
+                    href="/shop"
+                    class="btn-add-to-cart scale-0 text-lg opacity-0 transition-all duration-500 group-aria-expanded:scale-100 group-aria-expanded:opacity-100 lg:text-2xl"
+                  >
+                    Comandă
+                  </a>
+                </div>
+                <div class="flex h-[0%] w-[0%] flex-col gap-[4.5vw] overflow-hidden transition-all duration-500 group-aria-expanded:h-full group-aria-expanded:w-[250%]">
+                  <div class="mt-[2.5vw] flex flex-col gap-[4.5vw] lg:mt-[5vw] lg:flex-row">
+                    <div>
+                      <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                        <Image src={lemonFlavour} alt="Profil aromatic" class="mr-3" />
+                        Profil aromatic
+                      </h4>
+                      <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                        {flavours.map((flavour) => (
+                          <li>{flavour}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                        <Image src={flower} alt="Caracteristici organoleptice" class="mx-6 my-4" />
+                        Caracteristici organoleptice
+                      </h4>
+                      <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                        {organoleptic.map((item) => (
+                          <li>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="mb-2 flex flex-row items-center text-3xl font-bold">
+                      <Image src={culinarySign} alt="Recomandări culinare" class="mx-5 my-5" />
+                      Recomandări culinare
+                    </h4>
+                    <ul class="text-gray-dark ml-25 list-disc pl-5 text-lg lg:text-xl">
+                      {culinary.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="h-[0%] w-[0%] overflow-hidden transition-all duration-500 group-aria-expanded:h-full group-aria-expanded:w-full">
+                <div class="p-[4vw]">
+                  <h4 class="text-center text-3xl font-bold">Galerie</h4>
+                  <div class="mt-23 flex justify-center gap-18 overflow-auto">
+                    {[gallerySample, gallerySample, gallerySample, gallerySample].map((image) => (
+                      <Image
+                        src={image}
+                        alt="Gallery Sample"
+                        class="h-[29vw] w-[17vw] object-cover"
+                        loading="eager"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            data-wine-id={`${id}-mobile`}
+            class="wine-cell-mobile relative group flex w-full cursor-pointer flex-col border border-white bg-gray-light transition-all duration-500 lg:hidden"
+            aria-expanded="false"
+          >
+            <button class="absolute top-0 right-0 flex items-center justify-center opacity-0 transition-all duration-300 group-aria-expanded:opacity-100 w-10 h-10 cursor-pointer">
+              <Image src={close} alt="Close" />
+            </button>
+            <div class="flex flex-col px-8 py-1">
+              <div class="flex flex-col items-center">
+                <Image
+                  src={image}
+                  alt={title}
+                  class="mb-6 h-auto w-70"
+                  loading="eager"
+                />
+                <h3 class="mb-2 text-center text-2xl font-bold">{title}</h3>
+                <p class="mb-4 max-w-[70vw] text-center text-[1rem]">{description}</p>
+                <button class="text-gray my-5 text-base underline opacity-100 scale-100 transition-all duration-300 delay-300 group-aria-expanded:opacity-0 group-aria-expanded:scale-0 group-aria-expanded:delay-0">
+                  Vezi detalii
+                </button>
+              </div>
+
+              {/* Expanded content */}
+              <div class="max-h-0 overflow-hidden opacity-0 transition-all duration-1000 ease-in-out group-aria-expanded:max-h-[3000px] group-aria-expanded:opacity-100">
+                <div class="flex flex-col items-center gap-8">
+                  <a href="/shop" class="btn-add-to-cart text-center text-lg m-auto">
+                    Comandă
+                  </a>
+                  <div>
+                    <h4 class="mb-3 flex flex-col items-center text-[1.375rem] font-bold">
+                      <Image src={lemonFlavour} alt="Profil aromatic" class="h-13 w-13" />
+                      Profil aromatic
+                    </h4>
+                    <ul class="text-gray-dark ml-8 list-disc pl-5 text-sm/loose">
+                      {flavours.map((flavour) => (
+                        <li>{flavour}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 class="mb-3 flex flex-col items-center text-[1.375rem] font-bold">
+                      <Image src={flower} alt="Caracteristici organoleptice" class="mb-2 h-8 w-8" />
+                      Caracteristici organoleptice
+                    </h4>
+                    <ul class="text-gray-dark ml-8 list-disc pl-5 text-sm/loose">
+                      {organoleptic.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 class="mb-3 flex flex-col items-center text-[1.375rem] font-bold">
+                      <Image src={culinarySign} alt="Recomandări culinare" class="mb-2 h-9 w-9" />
+                      Recomandări culinare
+                    </h4>
+                    <ul class="text-gray-dark ml-8 list-disc pl-5 text-sm/loose">
+                      {culinary.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div class="relative">
+                      <div
+                        class="gallery-carousel overflow-hidden"
+                        data-wine-id={`${id}-gallery`}
+                      >
+                        <div class="gallery-track flex transition-transform duration-300 ease-out">
+                          {[gallerySample, gallerySample, gallerySample, gallerySample].map((galleryImage, index) => (
+                            <div class="w-full shrink-0">
+                              <Image
+                                src={galleryImage}
+                                alt={`Gallery ${index + 1}`}
+                                class="mx-auto h-auto w-[80vw] object-cover"
+                                loading="eager"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div class="mt-6 flex justify-center gap-2">
+                        {[gallerySample, gallerySample, gallerySample, gallerySample].map((_, index) => (
+                          <button
+                            class={`gallery-dot h-2 w-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-black' : 'bg-gray'}`}
+                            data-index={index}
+                            aria-label={`Go to image ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <a href="/shop" class="btn-add-to-cart my-4 text-center text-lg mx-auto">
+                      Comandă
+                  </a>
+                </div>
+                <button class="flex items-center justify-centerw-10 h-10 cursor-pointer m-auto">
+                  <Image src={arrowUp} alt="Close" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
     <h1
       class="animate-pulse bg-linear-to-r from-red-500 via-rose-400 to-red-600 bg-clip-text text-7xl font-bold text-transparent drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"
     >
@@ -87,6 +387,8 @@ import { MuxPlayer } from '@mux/mux-player-astro';
 </Layout>
 
 <script>
+  import { set } from 'astro:schema';
+
   function revealModal() {
     const modal = document.getElementById('command-modal');
     if (!modal) return;
@@ -95,7 +397,145 @@ import { MuxPlayer } from '@mux/mux-player-astro';
       modal.classList.add('opacity-100', 'translate-y-0');
     }, 1000);
   }
+
+  function initWineCells() {
+    const container = document.querySelector('.wine-cells-container');
+    if (!container) return;
+
+    // Desktop cells
+    const cells = container.querySelectorAll('.wine-cell');
+    let expandedCell: Element | null = null;
+
+    cells.forEach((cell) => {
+      cell.addEventListener('click', (_) => {
+        const otherCells = Array.from(cells).filter((c) => c !== cell) as HTMLElement[];
+
+        if (expandedCell === cell) {
+          collapseCell(cell, otherCells);
+          expandedCell = null;
+          return;
+        }
+
+        // Expand this cell
+        expandCell(cell as HTMLElement, otherCells);
+        expandedCell = cell;
+
+        setTimeout(() => {
+          const headerOffset = 80; // Adjust this value for your header height
+          const containerTop = container.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: containerTop - headerOffset,
+            behavior: 'smooth',
+          });
+        });
+      });
+    });
+
+    function expandCell(cell: HTMLElement, otherCells: HTMLElement[]) {
+      cell.setAttribute('aria-expanded', 'true');
+
+      cell.classList.remove('lg:w-1/2');
+
+      requestAnimationFrame(() => {
+        otherCells.forEach((otherCell) => {
+          otherCell.style.opacity = '0';
+          otherCell.style.width = '0%';
+          otherCell.style.height = '0%';
+        });
+      });
+    }
+
+    function collapseCell(cell: Element, otherCells: HTMLElement[]) {
+      cell.classList.add('lg:w-1/2');
+
+      otherCells.forEach((otherCell) => {
+        otherCell.style.opacity = '1';
+        otherCell.style.removeProperty('width');
+        otherCell.style.removeProperty('height');
+      });
+
+      cell.setAttribute('aria-expanded', 'false');
+    }
+
+    // Mobile cells - simpler logic, no hiding other cells
+    const mobileCells = container.querySelectorAll('.wine-cell-mobile');
+
+    mobileCells.forEach((cell) => {
+      cell.addEventListener('click', (e) => {
+        // Don't toggle if clicking on gallery controls
+        if ((e.target as HTMLElement).closest('.gallery-carousel, .gallery-dot')) {
+          return;
+        }
+        const isExpanded = cell.getAttribute('aria-expanded') === 'true';
+        cell.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+      });
+    });
+  }
+
+  function initGalleryCarousels() {
+    const carousels = document.querySelectorAll('.gallery-carousel');
+
+    carousels.forEach((carousel) => {
+      const track = carousel.querySelector('.gallery-track') as HTMLElement;
+      const dots = carousel.parentElement?.querySelectorAll('.gallery-dot') as NodeListOf<HTMLElement>;
+      if (!track || !dots) return;
+
+      let currentIndex = 0;
+      const totalImages = dots.length;
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      function updateCarousel(index: number) {
+        currentIndex = index;
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+        // Update dots
+        dots.forEach((dot, i) => {
+          if (i === currentIndex) {
+            dot.classList.add('bg-black');
+            dot.classList.remove('bg-gray');
+          } else {
+            dot.classList.remove('bg-black');
+            dot.classList.add('bg-gray');
+          }
+        });
+      }
+
+      // Touch events for swipe
+      carousel.addEventListener('touchstart', (e) => {
+        touchStartX = (e as TouchEvent).touches[0].clientX;
+      });
+
+      carousel.addEventListener('touchend', (e) => {
+        touchEndX = (e as TouchEvent).changedTouches[0].clientX;
+        handleSwipe();
+      });
+
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0 && currentIndex < totalImages - 1) {
+            updateCarousel(currentIndex + 1);
+          } else if (diff < 0 && currentIndex > 0) {
+            updateCarousel(currentIndex - 1);
+          }
+        }
+      }
+
+      // Dot click events
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          updateCarousel(index);
+        });
+      });
+    });
+  }
+
   document.addEventListener('astro:page-load', () => {
     revealModal();
+    initWineCells();
+    initGalleryCarousels();
   });
 </script>
