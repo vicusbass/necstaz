@@ -21,10 +21,11 @@ import bottleSpumant from '../assets/bottle-spumant-demisec.png';
 
 <Layout title="Nextaz">
   <div class="flex min-h-screen flex-col items-center">
-    <picture class="inset-0 h-full w-full">
-      <source media="(min-width: 1024px)" srcset={allWines.src} />
-      <Image src={allWinesMobile} class="w-full object-cover" loading="eager" alt="All Wines" />
-    </picture>
+    <div class="inset-0 h-full w-full">
+      <Image src={allWinesMobile} class="block lg:hidden w-full object-cover" loading="eager" alt="All Wines" />
+      <Image src={allWines} class="hidden lg:block w-full object-cover" loading="eager" alt="All Wines" />
+    </div>
+
     <div class="flex w-full flex-col items-center py-18 lg:flex-row lg:justify-evenly lg:py-40">
       <div class="flex">
         <div
