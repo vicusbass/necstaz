@@ -1,9 +1,11 @@
 import type { APIRoute } from 'astro';
 import { Resend } from 'resend';
 
+export const prerender = false;
+
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     const formData = await request.formData();
     const name = formData.get('name')?.toString() || '';
@@ -13,7 +15,10 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     const message = formData.get('message')?.toString() || '';
 
     if (!name || !email || !phone || !subject || !message) {
-      return redirect('/contact/failure?error=missing_fields');
+      return new Response(JSON.stringify({ success: false, error: 'missing_fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { error } = await resend.emails.send({
@@ -35,12 +40,21 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 
     if (error) {
       console.error('Resend error:', error);
-      return redirect('/contact/failure?error=send_failed');
+      return new Response(JSON.stringify({ success: false, error: 'send_failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return redirect('/contact/success');
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Contact form error:', error);
-    return redirect('/contact/failure?error=server_error');
+    return new Response(JSON.stringify({ success: false, error: 'server_error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 };

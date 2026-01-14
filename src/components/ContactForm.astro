@@ -2,12 +2,7 @@
 
 ---
 
-<form
-  id="contact-form"
-  action="/api/contact"
-  method="POST"
-  class="flex w-full flex-col gap-6 px-8 py-12 lg:max-w-4xl lg:px-0"
->
+<form id="contact-form" class="flex w-full flex-col gap-6 px-8 py-12 lg:max-w-4xl lg:px-0">
   <input
     type="text"
     name="name"
@@ -51,8 +46,174 @@
 
   <button
     type="submit"
-    class="hover:bg-gray-dark w-full bg-black py-6 text-lg font-medium text-white transition-all lg:text-xl"
+    disabled
+    class="hover:bg-gray-dark w-full bg-black py-6 text-lg font-medium text-white transition-all disabled:cursor-not-allowed disabled:opacity-50 lg:text-xl"
   >
     Trimite mesaj
   </button>
 </form>
+
+<!-- Success Modal -->
+<div
+  id="success-modal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/0 px-4 transition-colors duration-300"
+>
+  <div class="max-w-md scale-95 bg-white p-10 text-center opacity-0 transition-all duration-300">
+    <div class="mb-6 text-5xl">&#10003;</div>
+    <h2 class="mb-4 text-2xl font-bold lg:text-3xl">Mesaj trimis!</h2>
+    <p class="text-gray-dark mb-8 text-lg">
+      Mulțumim pentru mesaj. Te vom contacta în cel mai scurt timp posibil.
+    </p>
+    <button
+      id="success-modal-close"
+      class="bg-black px-8 py-3 text-lg font-medium text-white transition-all hover:bg-gray-800"
+    >
+      Închide
+    </button>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div
+  id="error-modal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/0 px-4 transition-colors duration-300"
+>
+  <div class="max-w-md scale-95 bg-white p-10 text-center opacity-0 transition-all duration-300">
+    <div class="mb-6 text-5xl text-red-500">&#10007;</div>
+    <h2 class="mb-4 text-2xl font-bold lg:text-3xl">Ceva nu a mers bine</h2>
+    <p id="error-message" class="text-gray-dark mb-6 text-lg">
+      A apărut o eroare. Te rugăm să ne contactezi direct.
+    </p>
+    <div class="mb-8 flex flex-col gap-2 text-lg">
+      <a href="mailto:contact@nextaz.ro" class="text-black underline hover:no-underline">
+        contact@nextaz.ro
+      </a>
+      <a href="tel:0755123456" class="text-black underline hover:no-underline"> 0755 123 456 </a>
+    </div>
+    <button
+      id="error-modal-close"
+      class="border border-black px-8 py-3 text-lg font-medium text-black transition-all hover:bg-gray-100"
+    >
+      Închide
+    </button>
+  </div>
+</div>
+
+<script>
+  function initContactForm() {
+    const form = document.getElementById('contact-form') as HTMLFormElement;
+    const successModal = document.getElementById('success-modal');
+    const errorModal = document.getElementById('error-modal');
+    const errorMessage = document.getElementById('error-message');
+    const successClose = document.getElementById('success-modal-close');
+    const errorClose = document.getElementById('error-modal-close');
+    const submitButton = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+    if (!form || !successModal || !errorModal || !submitButton) return;
+
+    // Check mandatory fields
+    function checkFormValidity() {
+      const inputs = form.querySelectorAll('input[required], textarea[required]');
+      const allFilled = Array.from(inputs).every(
+        (input) => (input as HTMLInputElement).value.trim() !== ''
+      );
+      submitButton.disabled = !allFilled;
+    }
+
+    form.querySelectorAll('input[required], textarea[required]').forEach((input) => {
+      input.addEventListener('input', checkFormValidity);
+    });
+
+    const errorMessages: Record<string, string> = {
+      missing_fields: 'Te rugăm să completezi toate câmpurile obligatorii.',
+      send_failed: 'Nu am putut trimite mesajul. Te rugăm să ne contactezi direct.',
+      server_error: 'A apărut o eroare. Te rugăm să ne contactezi direct.',
+    };
+
+    function showModal(modal: HTMLElement) {
+      const content = modal.querySelector('div') as HTMLElement;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+
+      requestAnimationFrame(() => {
+        modal.classList.remove('bg-black/0');
+        modal.classList.add('bg-black/50');
+        content.classList.remove('opacity-0', 'scale-95');
+        content.classList.add('opacity-100', 'scale-100');
+      });
+    }
+
+    function hideModal(modal: HTMLElement) {
+      const content = modal.querySelector('div') as HTMLElement;
+      modal.classList.remove('bg-black/50');
+      modal.classList.add('bg-black/0');
+      content.classList.remove('opacity-100', 'scale-100');
+      content.classList.add('opacity-0', 'scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+      }, 300);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const originalText = submitButton.textContent;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Se trimite...';
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          form.reset();
+          showModal(successModal);
+        } else {
+          if (errorMessage) {
+            errorMessage.textContent = errorMessages[result.error] || errorMessages.server_error;
+          }
+          showModal(errorModal);
+        }
+      } catch {
+        if (errorMessage) {
+          errorMessage.textContent = errorMessages.server_error;
+        }
+        showModal(errorModal);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+
+    successClose?.addEventListener('click', () => hideModal(successModal));
+    errorClose?.addEventListener('click', () => hideModal(errorModal));
+
+    // Close on backdrop click
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) hideModal(successModal);
+    });
+    errorModal.addEventListener('click', (e) => {
+      if (e.target === errorModal) hideModal(errorModal);
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideModal(successModal);
+        hideModal(errorModal);
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initContactForm();
+  });
+</script>
