@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CartList from '../components/cart/CartList.svelte';
+import CartSummary from '../components/cart/CartSummary.svelte';
+---
+
+<Layout title="Coș de cumpărături | Nextaz">
+  <section class="cart-page bg-white px-6 pt-32 pb-16 lg:px-30 lg:pt-40 lg:pb-24">
+    <div class="cart-header mb-8 lg:mb-12">
+      <h1 class="text-3xl font-bold text-black lg:text-5xl">Coșul tău</h1>
+    </div>
+
+    <div class="cart-content">
+      <div class="cart-items-section">
+        <CartList client:load />
+      </div>
+      <aside class="cart-summary-section">
+        <CartSummary client:load />
+      </aside>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .cart-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .cart-items-section {
+    flex: 1;
+  }
+
+  .cart-summary-section {
+    width: 100%;
+  }
+
+  @media (min-width: 1024px) {
+    .cart-content {
+      flex-direction: row;
+      gap: 3rem;
+      align-items: flex-start;
+    }
+
+    .cart-items-section {
+      flex: 1;
+    }
+
+    .cart-summary-section {
+      width: 400px;
+      position: sticky;
+      top: 8rem;
+    }
+  }
+</style>

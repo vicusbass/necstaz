@@ -1,0 +1,189 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const orderId = Astro.url.searchParams.get('orderId');
+const isMock = Astro.url.searchParams.get('mock') === 'true';
+---
+
+<Layout title="Comandă finalizată | Nextaz">
+  <section class="payment-page bg-white px-6 pt-32 pb-16 lg:px-30 lg:pt-40 lg:pb-24">
+    <div class="payment-content">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12l2 2 4-4" />
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold text-black lg:text-5xl">
+        Mulțumim pentru comandă!
+      </h1>
+
+      {orderId && (
+        <p class="order-id">
+          Numărul comenzii tale: <strong>#{orderId}</strong>
+        </p>
+      )}
+
+      <p class="success-message">
+        Comanda ta a fost plasată cu succes. Vei primi în curând un email de confirmare cu detaliile comenzii.
+      </p>
+
+      {isMock && (
+        <div class="mock-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+          <span>Aceasta este o comandă de test. Plata nu a fost procesată efectiv.</span>
+        </div>
+      )}
+
+      <div class="actions">
+        <a href="/shop" class="btn-primary">
+          Continuă cumpărăturile
+        </a>
+        <a href="/" class="btn-secondary">
+          Înapoi acasă
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Clear cart after successful payment
+  import { clearCart } from '../../stores/cart';
+
+  document.addEventListener('astro:page-load', () => {
+    // Clear the cart on success page load
+    clearCart();
+  });
+</script>
+
+<style>
+  .payment-page {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .payment-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    max-width: 500px;
+  }
+
+  .success-icon {
+    width: 5rem;
+    height: 5rem;
+    color: #22c55e;
+  }
+
+  .success-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .order-id {
+    font-size: 1.125rem;
+    color: #6e6e6e;
+    margin: 0;
+  }
+
+  .order-id strong {
+    color: #000;
+  }
+
+  .success-message {
+    font-size: 1rem;
+    color: #6e6e6e;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .mock-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.875rem;
+    text-align: left;
+  }
+
+  .mock-notice svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    background: #000;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: #262626;
+  }
+
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    color: #000;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid #e5e5e5;
+    transition: border-color 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: #000;
+  }
+
+  @media (min-width: 1024px) {
+    .success-icon {
+      width: 6rem;
+      height: 6rem;
+    }
+
+    .actions {
+      flex-direction: row;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: auto;
+      min-width: 200px;
+    }
+  }
+</style>

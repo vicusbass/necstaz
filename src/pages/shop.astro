@@ -13,6 +13,7 @@ import { shopQuery } from '../queries/shop';
 import SingleProductCard from '../components/SingleProductCard.astro';
 import PackageProductCard from '../components/PackageProductCard.astro';
 import BundleCard from '../components/BundleCard.astro';
+import AddToCartButton from '../components/cart/AddToCartButton.svelte';
 
 interface Product {
   _id: string;
@@ -209,14 +210,13 @@ const bundleIcons = {
           <p class="text-lg font-bold text-black">
             40,00 lei
           </p>
-          <button
-            class="btn-add-to-cart"
-            data-product-id="subscription"
-            data-product-name="Abonament lunar"
-            data-product-price={subscriptionPrice}
-          >
-            Adaugă în coș
-          </button>
+          <AddToCartButton
+            client:visible
+            productId="subscription"
+            productName="Abonament lunar"
+            productPrice={subscriptionPrice}
+            itemType="subscription"
+          />
         </div>
       </article>
     </div>

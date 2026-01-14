@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 import sanity from '@sanity/astro';
 import react from '@astrojs/react';
+import svelte from '@astrojs/svelte';
 
 import vercel from '@astrojs/vercel';
 
@@ -21,7 +22,7 @@ export default defineConfig({
     projectId: 'vrxix2id',
     dataset: 'production',
     useCdn: false
-  }), react()],
+  }), react(), svelte()],
 
   adapter: vercel()
 });
