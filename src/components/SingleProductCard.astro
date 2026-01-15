@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import type { SanityImageSource } from '@sanity/image-url';
 import { urlFor } from '../utils/sanity';
 import AddToCartButton from './cart/AddToCartButton.svelte';
+import { SGR_DEPOSIT } from '../config';
 
 interface Product {
   _id: string;
@@ -51,9 +52,14 @@ const imageUrl = urlFor(image)?.width(800).url();
       {description && <p class="text-gray m-0 text-base font-normal">{description}</p>}
     </div>
 
-    <p class="m-0 text-base font-bold text-black">
-      {price.toFixed(2).replace('.', ',')} lei
-    </p>
+    <div class="flex flex-col items-center gap-0.5">
+      <p class="m-0 text-base font-bold text-black">
+        {price.toFixed(2).replace('.', ',')} lei
+      </p>
+      <p class="m-0 text-xs text-gray">
+        Garanție SGR: {SGR_DEPOSIT.toFixed(2).replace('.', ',')} lei
+      </p>
+    </div>
 
     <AddToCartButton
       client:visible

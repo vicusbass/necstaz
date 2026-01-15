@@ -1,6 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CheckoutForm from '../components/checkout/CheckoutForm.svelte';
+import { client } from '../utils/sanity';
+
+// Fetch shipping configuration from Sanity
+const shopData = await client.fetch<{
+  shippingPrice: number;
+  freeShippingThreshold: number;
+} | null>(`*[_type == "shop"][0]{ shippingPrice, freeShippingThreshold }`);
+
+const shippingPrice = shopData?.shippingPrice ?? 0;
+const freeShippingThreshold = shopData?.freeShippingThreshold ?? 0;
 ---
 
 <Layout title="Finalizare comandă | Nextaz">
@@ -16,7 +26,11 @@ import CheckoutForm from '../components/checkout/CheckoutForm.svelte';
     </div>
 
     <div class="checkout-content">
-      <CheckoutForm client:load />
+      <CheckoutForm
+        client:load
+        shippingPrice={shippingPrice}
+        freeShippingThreshold={freeShippingThreshold}
+      />
     </div>
   </section>
 </Layout>

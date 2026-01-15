@@ -101,6 +101,20 @@ export const shop = defineType({
       description: 'Pret in LEI pentru optiunea de abonament',
       validation: (rule) => rule.required().positive().precision(2),
     }),
+    defineField({
+      name: 'shippingPrice',
+      title: 'Cost livrare',
+      type: 'number',
+      description: 'Cost fix de livrare in LEI',
+      validation: (rule) => rule.required().min(0).precision(2),
+    }),
+    defineField({
+      name: 'freeShippingThreshold',
+      title: 'Prag livrare gratuită',
+      type: 'number',
+      description: 'Suma minimă în LEI pentru livrare gratuită (fără SGR)',
+      validation: (rule) => rule.required().min(0).precision(2),
+    }),
   ],
   preview: {
     select: {

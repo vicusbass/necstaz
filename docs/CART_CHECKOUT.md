@@ -10,6 +10,7 @@ The cart system uses **Svelte + nanostores** for state management, following Ast
 
 ```
 src/
+├── config.ts                        # Global constants (SGR_DEPOSIT)
 ├── stores/
 │   └── cart.ts                      # Nanostores cart state + localStorage
 ├── components/
@@ -52,7 +53,10 @@ Central state management using nanostores:
 
 - `cartItems` - Array of cart items
 - `cartCount` - Total item count (computed)
-- `cartTotal` - Total price (computed)
+- `cartSubtotal` - Price without SGR (computed)
+- `bottleCount` - Number of wine bottles for SGR (computed)
+- `sgrTotal` - Total SGR deposit (computed)
+- `cartTotal` - Total price including SGR (computed)
 - `isCartEmpty` - Boolean check (computed)
 - `addToCart(item)` - Add item with toast notification
 - `removeFromCart(id, type)` - Remove item
@@ -60,6 +64,19 @@ Central state management using nanostores:
 - `clearCart()` - Clear all items
 
 Cart persists to localStorage and syncs across tabs via `storage` event.
+
+### SGR Deposit (Garanție SGR)
+
+The SGR (Sistem de Garanție-Returnare) is a Romanian bottle recycling deposit of **0.50 lei per bottle**. This deposit:
+
+- Is displayed under each product price on product cards
+- Is shown as a line item in the cart summary
+- Is shown per product in cart items (for wine bottles only)
+- Is included in the checkout total
+- Is calculated server-side during payment initiation
+- Is stored separately in the order (`subtotal`, `sgrDeposit`, `total`)
+
+The SGR constant is defined in `src/config.ts` and imported wherever needed.
 
 ### Toast Notifications
 
@@ -130,12 +147,14 @@ Validates cart items against current Sanity prices.
 ### POST `/api/payment/initiate`
 
 Initiates payment flow:
+
 1. Validates customer data (email, phone)
 2. Fetches current prices from Sanity (security critical)
-3. Creates order in Sanity with status "pending"
+3. Saves order to database (Supabase - currently mock)
 4. Returns payment URL
 
 **Request:**
+
 ```json
 {
   "customer": { "type": "person", "email": "...", ... },
@@ -144,6 +163,7 @@ Initiates payment flow:
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -155,31 +175,44 @@ Initiates payment flow:
 ### POST `/api/payment/ipn`
 
 Netopia IPN (Instant Payment Notification) webhook:
+
 - Receives payment status updates from Netopia
-- Updates order status in Sanity
+- Updates order status in database (Supabase - currently mock)
 - Returns confirmation to Netopia
 
-## Sanity Integration
+## Database Integration (Supabase)
 
-### Order Schema (`studio-nextaz/schemaTypes/order.ts`)
+Order persistence is handled via Supabase (currently mock implementation).
+
+### Order Data Structure
 
 ```typescript
 {
-  name: 'order',
-  type: 'document',
-  fields: [
-    { name: 'orderId', type: 'string' },
-    { name: 'status', type: 'string' }, // pending, paid, failed, cancelled
-    { name: 'customerType', type: 'string' }, // person, company
-    { name: 'customer', type: 'object' }, // nested customer data
-    { name: 'items', type: 'array' }, // order items
-    { name: 'total', type: 'number' },
-    { name: 'netopiaId', type: 'string' },
-    { name: 'createdAt', type: 'datetime' },
-    { name: 'notes', type: 'text' }
-  ]
+  orderId: string;           // e.g., "NX-XXXXX-XXXX"
+  status: string;            // pending, paid, failed, cancelled
+  customerType: string;      // person, company
+  customer: object;          // nested customer data
+  items: array;              // order items
+  subtotal: number;          // price without SGR
+  sgrDeposit: number;        // SGR deposit amount
+  total: number;             // final total
+  netopiaId?: string;        // Netopia transaction ID
+  createdAt: string;         // ISO timestamp
 }
 ```
+
+### TODO: Supabase Setup
+
+1. Create a Supabase project
+2. Create an `orders` table with the structure above
+3. Add environment variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+4. Uncomment the Supabase client code in the API endpoints
+
+## Sanity Integration (Read-Only)
+
+Sanity is used only for **reading product data** (prices, descriptions). Orders are NOT stored in Sanity.
 
 ### Price Validation Query
 
@@ -210,9 +243,9 @@ Netopia IPN (Instant Payment Notification) webhook:
 Add these to your `.env` file:
 
 ```env
-# Sanity write token (for creating orders)
-# Get from: https://www.sanity.io/manage/project/vrxix2id/api#tokens
-SANITY_WRITE_TOKEN=sk...
+# Supabase (for order persistence)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 
 # Netopia Payment Gateway
 # Get from: Netopia admin panel
@@ -225,14 +258,16 @@ NETOPIA_RETURN_URL=https://your-domain.com/payment/success
 NETOPIA_CONFIRM_URL=https://your-domain.com/api/payment/ipn
 ```
 
-### Deploy Sanity Schema
+### Supabase Setup
 
-Run this command in the `studio-nextaz` directory to deploy the order schema:
-
-```bash
-cd studio-nextaz
-npx sanity@latest schema deploy
-```
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Create an `orders` table with appropriate columns
+3. Set up Row Level Security (RLS) policies
+4. Add the environment variables above
+5. Install the Supabase client: `npm install @supabase/supabase-js`
+6. Uncomment the Supabase code in:
+   - `src/pages/api/payment/initiate.ts`
+   - `src/pages/api/payment/ipn.ts`
 
 ### Netopia Integration
 

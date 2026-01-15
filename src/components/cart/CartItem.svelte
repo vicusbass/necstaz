@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { CartItem } from '../../types/cart';
   import { updateQuantity, removeFromCart, formatPrice } from '../../stores/cart';
+  import { SGR_DEPOSIT } from '../../config';
 
   interface Props {
     item: CartItem;
@@ -25,6 +26,8 @@
   }
 
   const lineTotal = $derived(item.price * item.quantity);
+  const isProduct = $derived(item.type === 'product');
+  const sgrAmount = $derived(isProduct ? SGR_DEPOSIT * item.quantity : 0);
 </script>
 
 <article class="cart-item">
@@ -81,6 +84,9 @@
         <span class="price-value">{formatPrice(lineTotal)}</span>
         {#if item.quantity > 1}
           <span class="price-unit">{formatPrice(item.price)} / buc</span>
+        {/if}
+        {#if isProduct}
+          <span class="price-sgr">Garanție SGR: {formatPrice(sgrAmount)}</span>
         {/if}
       </div>
     </div>
@@ -222,6 +228,11 @@
   }
 
   .price-unit {
+    font-size: 0.75rem;
+    color: #909090;
+  }
+
+  .price-sgr {
     font-size: 0.75rem;
     color: #909090;
   }

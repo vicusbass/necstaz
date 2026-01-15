@@ -1,5 +1,6 @@
 import { atom, computed } from 'nanostores';
 import type { CartItem, CartState } from '../types/cart';
+import { SGR_DEPOSIT } from '../config';
 
 const CART_STORAGE_KEY = 'necstaz_cart';
 
@@ -65,10 +66,29 @@ export const cartCount = computed(cartState, (state) =>
   state.items.reduce((sum, item) => sum + item.quantity, 0)
 );
 
-// Computed: total price (client-side, for display only)
-export const cartTotal = computed(cartState, (state) =>
+// Computed: total price without SGR (client-side, for display only)
+export const cartSubtotal = computed(cartState, (state) =>
   state.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 );
+
+// Computed: count of wine bottles (products only, for SGR calculation)
+export const bottleCount = computed(cartState, (state) =>
+  state.items
+    .filter((item) => item.type === 'product')
+    .reduce((sum, item) => sum + item.quantity, 0)
+);
+
+// Computed: total SGR deposit
+export const sgrTotal = computed(bottleCount, (count) => count * SGR_DEPOSIT);
+
+// Computed: total price including SGR (client-side, for display only)
+export const cartTotal = computed(cartState, (state) => {
+  const subtotal = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const bottles = state.items
+    .filter((item) => item.type === 'product')
+    .reduce((sum, item) => sum + item.quantity, 0);
+  return subtotal + bottles * SGR_DEPOSIT;
+});
 
 // Computed: is cart empty
 export const isCartEmpty = computed(cartState, (state) => state.items.length === 0);

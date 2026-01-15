@@ -85,8 +85,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: #000;
-    color: #fff;
+    background: #63fd82;
+    color: #000;
     border-radius: 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     min-width: 280px;

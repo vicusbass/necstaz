@@ -1,19 +1,11 @@
 import type { APIRoute } from 'astro';
-import { createClient } from '@sanity/client';
 
 export const prerender = false;
+
 import { loadQuery } from '../../../utils/loadQuery';
 import { cartValidationQuery } from '../../../queries/cart';
 import type { CartItem, Customer, PersonCustomer, CompanyCustomer } from '../../../types/cart';
-
-// Create a client for writing to Sanity
-const sanityWriteClient = createClient({
-  projectId: 'vrxix2id',
-  dataset: 'production',
-  apiVersion: '2024-01-01',
-  useCdn: false,
-  token: import.meta.env.SANITY_WRITE_TOKEN,
-});
+import { SGR_DEPOSIT } from '../../../config';
 
 interface SanityProduct {
   _id: string;
@@ -50,6 +42,35 @@ function validatePhone(phone: string): boolean {
   // Romanian phone format: +40xxx, 07xx, etc.
   const cleaned = phone.replace(/[\s-]/g, '');
   return /^(\+40|0)[0-9]{9,10}$/.test(cleaned);
+}
+
+// TODO: Replace with actual Supabase order persistence
+// import { createClient } from '@supabase/supabase-js';
+// const supabase = createClient(
+//   import.meta.env.SUPABASE_URL,
+//   import.meta.env.SUPABASE_ANON_KEY
+// );
+async function saveOrderToDatabase(orderData: {
+  orderId: string;
+  status: string;
+  customerType: string;
+  customer: Record<string, unknown>;
+  items: Array<{ id: string; type: string; name: string; price: number; quantity: number }>;
+  subtotal: number;
+  sgrDeposit: number;
+  total: number;
+  createdAt: string;
+}): Promise<void> {
+  // TODO: Implement Supabase order persistence
+  // const { error } = await supabase.from('orders').insert(orderData);
+  // if (error) throw error;
+
+  // For now, just log the order
+  console.log('Order created (mock):', orderData.orderId, {
+    total: orderData.total,
+    items: orderData.items.length,
+    customer: orderData.customer.email,
+  });
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -113,7 +134,8 @@ export const POST: APIRoute = async ({ request }) => {
       price: number;
       quantity: number;
     }> = [];
-    let total = 0;
+    let subtotal = 0;
+    let bottleCount = 0;
     const errors: string[] = [];
 
     for (const item of cartItems) {
@@ -123,6 +145,7 @@ export const POST: APIRoute = async ({ request }) => {
         const sanityProduct = data?.products?.find((p) => p._id === item.id);
         if (sanityProduct) {
           serverPrice = sanityProduct.price;
+          bottleCount += item.quantity; // Count bottles for SGR
         } else {
           errors.push(`Produsul "${item.name}" nu a fost găsit`);
           continue;
@@ -152,9 +175,13 @@ export const POST: APIRoute = async ({ request }) => {
           price: serverPrice,
           quantity: item.quantity,
         });
-        total += serverPrice * item.quantity;
+        subtotal += serverPrice * item.quantity;
       }
     }
+
+    // Calculate SGR deposit and total
+    const sgrTotal = bottleCount * SGR_DEPOSIT;
+    const total = subtotal + sgrTotal;
 
     if (errors.length > 0) {
       return new Response(
@@ -179,7 +206,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Generate order ID
     const orderId = generateOrderId();
 
-    // Prepare customer data for Sanity
+    // Prepare customer data
     const customerData: Record<string, unknown> = {
       email: customer.email,
       phone: customer.phone,
@@ -198,22 +225,21 @@ export const POST: APIRoute = async ({ request }) => {
       customerData.contactPerson = companyCustomer.contactPerson;
     }
 
-    // Create order in Sanity
-    const orderDoc = {
-      _type: 'order',
-      orderId,
-      status: 'pending',
-      customerType: customer.type,
-      customer: customerData,
-      items: validatedItems,
-      total,
-      createdAt: new Date().toISOString(),
-    };
-
+    // Save order to database (Supabase)
     try {
-      await sanityWriteClient.create(orderDoc);
-    } catch (sanityError) {
-      console.error('Failed to create order in Sanity:', sanityError);
+      await saveOrderToDatabase({
+        orderId,
+        status: 'pending',
+        customerType: customer.type,
+        customer: customerData,
+        items: validatedItems,
+        subtotal,
+        sgrDeposit: sgrTotal,
+        total,
+        createdAt: new Date().toISOString(),
+      });
+    } catch (dbError) {
+      console.error('Failed to save order to database:', dbError);
       // Continue anyway - we can still process the payment
       // The IPN webhook will create/update the order if needed
     }

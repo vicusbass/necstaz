@@ -17,7 +17,7 @@
     subscribeToCartChanges();
 
     const unsubItems = cartItems.subscribe((value) => {
-      items = value;
+      items = [...value];
     });
 
     const unsubEmpty = isCartEmpty.subscribe((value) => {

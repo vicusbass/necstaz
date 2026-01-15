@@ -2,17 +2,6 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-import { createClient } from '@sanity/client';
-
-// Create a client for writing to Sanity
-const sanityWriteClient = createClient({
-  projectId: 'vrxix2id',
-  dataset: 'production',
-  apiVersion: '2024-01-01',
-  useCdn: false,
-  token: import.meta.env.SANITY_WRITE_TOKEN,
-});
-
 // Netopia payment status codes
 const NETOPIA_STATUS = {
   PENDING: 0,
@@ -69,6 +58,28 @@ function mapNetopiaStatusToOrderStatus(netopiaStatus: number): string {
   }
 }
 
+// TODO: Replace with actual Supabase order update
+// import { createClient } from '@supabase/supabase-js';
+// const supabase = createClient(
+//   import.meta.env.SUPABASE_URL,
+//   import.meta.env.SUPABASE_ANON_KEY
+// );
+async function updateOrderStatus(
+  orderId: string,
+  status: string,
+  netopiaId?: string
+): Promise<void> {
+  // TODO: Implement Supabase order update
+  // const { error } = await supabase
+  //   .from('orders')
+  //   .update({ status, netopia_id: netopiaId, updated_at: new Date().toISOString() })
+  //   .eq('order_id', orderId);
+  // if (error) throw error;
+
+  // For now, just log the update
+  console.log(`Order ${orderId} updated (mock):`, { status, netopiaId });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     // Parse the IPN payload
@@ -81,7 +92,7 @@ export const POST: APIRoute = async ({ request }) => {
     } else {
       // Handle form-encoded data if needed
       const formData = await request.formData();
-      payload = JSON.parse(formData.get('data') as string || '{}');
+      payload = JSON.parse((formData.get('data') as string) || '{}');
     }
 
     console.log('Received IPN:', JSON.stringify(payload, null, 2));
@@ -102,30 +113,12 @@ export const POST: APIRoute = async ({ request }) => {
     // Map Netopia status to our order status
     const orderStatus = mapNetopiaStatusToOrderStatus(paymentStatus);
 
-    // Update order in Sanity
+    // Update order in database (Supabase)
     try {
-      // Find the order by orderId
-      const existingOrder = await sanityWriteClient.fetch(
-        `*[_type == "order" && orderId == $orderId][0]._id`,
-        { orderId }
-      );
-
-      if (existingOrder) {
-        // Update existing order
-        await sanityWriteClient
-          .patch(existingOrder)
-          .set({
-            status: orderStatus,
-            netopiaId: netopiaId || undefined,
-          })
-          .commit();
-
-        console.log(`Order ${orderId} updated to status: ${orderStatus}`);
-      } else {
-        console.warn(`Order ${orderId} not found in Sanity`);
-      }
-    } catch (sanityError) {
-      console.error('Failed to update order in Sanity:', sanityError);
+      await updateOrderStatus(orderId, orderStatus, netopiaId);
+      console.log(`Order ${orderId} updated to status: ${orderStatus}`);
+    } catch (dbError) {
+      console.error('Failed to update order in database:', dbError);
       // Don't fail the IPN response - Netopia needs confirmation
     }
 
@@ -167,8 +160,8 @@ export const POST: APIRoute = async ({ request }) => {
 
 // Also support GET for testing/health check
 export const GET: APIRoute = async () => {
-  return new Response(
-    JSON.stringify({ status: 'IPN endpoint active' }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
-  );
+  return new Response(JSON.stringify({ status: 'IPN endpoint active' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 };

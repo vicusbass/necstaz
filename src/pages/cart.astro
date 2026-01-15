@@ -2,6 +2,16 @@
 import Layout from '../layouts/Layout.astro';
 import CartList from '../components/cart/CartList.svelte';
 import CartSummary from '../components/cart/CartSummary.svelte';
+import { client } from '../utils/sanity';
+
+// Fetch shipping configuration from Sanity
+const shopData = await client.fetch<{
+  shippingPrice: number;
+  freeShippingThreshold: number;
+} | null>(`*[_type == "shop"][0]{ shippingPrice, freeShippingThreshold }`);
+
+const shippingPrice = shopData?.shippingPrice ?? 0;
+const freeShippingThreshold = shopData?.freeShippingThreshold ?? 0;
 ---
 
 <Layout title="Coș de cumpărături | Nextaz">
@@ -15,7 +25,11 @@ import CartSummary from '../components/cart/CartSummary.svelte';
         <CartList client:load />
       </div>
       <aside class="cart-summary-section">
-        <CartSummary client:load />
+        <CartSummary
+          client:load
+          shippingPrice={shippingPrice}
+          freeShippingThreshold={freeShippingThreshold}
+        />
       </aside>
     </div>
   </section>
