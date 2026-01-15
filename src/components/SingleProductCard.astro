@@ -2,6 +2,8 @@
 import { Image } from 'astro:assets';
 import type { SanityImageSource } from '@sanity/image-url';
 import { urlFor } from '../utils/sanity';
+import AddToCartButton from './cart/AddToCartButton.svelte';
+import { SGR_DEPOSIT } from '../config';
 
 interface Product {
   _id: string;
@@ -17,7 +19,7 @@ interface Props {
 }
 
 const { product } = Astro.props;
-const { _id: id, name, slug, image, description, price } = product;
+const { _id: id, name, image, description, price } = product;
 
 const imageUrl = urlFor(image)?.width(800).url();
 ---
@@ -50,18 +52,23 @@ const imageUrl = urlFor(image)?.width(800).url();
       {description && <p class="text-gray m-0 text-base font-normal">{description}</p>}
     </div>
 
-    <p class="m-0 text-base font-bold text-black">
-      {price.toFixed(2).replace('.', ',')} lei
-    </p>
+    <div class="flex flex-col items-center gap-0.5">
+      <p class="m-0 text-base font-bold text-black">
+        {price.toFixed(2).replace('.', ',')} lei
+      </p>
+      <p class="m-0 text-xs text-gray">
+        Garanție SGR: {SGR_DEPOSIT.toFixed(2).replace('.', ',')} lei
+      </p>
+    </div>
 
-    <button
-      class="btn-add-to-cart mt-auto"
-      data-product-id={id}
-      data-product-name={name}
-      data-product-price={price}
-      aria-label={`Adaugă ${name} în coș`}
-    >
-      Adaugă în coș
-    </button>
+    <AddToCartButton
+      client:visible
+      productId={id}
+      productName={name}
+      productPrice={price}
+      itemType="product"
+      image={imageUrl}
+      class="mt-auto"
+    />
   </div>
 </article>

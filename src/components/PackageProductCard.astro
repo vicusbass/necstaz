@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import type { SanityImageSource } from '@sanity/image-url';
 import { urlFor } from '../utils/sanity';
+import AddToCartButton from './cart/AddToCartButton.svelte';
 
 interface Product {
   _id: string;
@@ -59,15 +60,14 @@ const imageUrl = urlFor(image)?.width(1200).height(600).url();
         {price.toFixed(2).replace('.', ',')} lei
       </p>
 
-      <button
-        class="btn-add-to-cart"
-        data-product-id={id}
-        data-product-name={name}
-        data-product-price={price}
-        aria-label={`Adaugă ${name} în coș`}
-      >
-        Adaugă în coș
-      </button>
+      <AddToCartButton
+        client:visible
+        productId={id}
+        productName={name}
+        productPrice={price}
+        itemType="product"
+        image={imageUrl}
+      />
     </div>
   </div>
 </article>

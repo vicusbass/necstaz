@@ -1,6 +1,7 @@
 ---
 import Logo from '../assets/logo.svg';
 import Cart from '../assets/cart.svg';
+import CartBadge from './cart/CartBadge.svelte';
 
 const currentPath = Astro.url.pathname;
 ---
@@ -32,8 +33,9 @@ const currentPath = Astro.url.pathname;
       class:list={['nav-link', currentPath === '/contact' && 'underline underline-offset-6']}
       >Contact</a
     >
-    <a href="/cart" class="nav-link h-6 w-auto" aria-label="Coș de cumpărături">
+    <a href="/cart" class="nav-link relative h-6 w-auto" aria-label="Coș de cumpărături">
       <Cart />
+      <CartBadge client:load />
     </a>
   </nav>
 
@@ -41,7 +43,7 @@ const currentPath = Astro.url.pathname;
   <div class="flex items-center gap-6 lg:hidden">
     <a href="/cart" class="relative" aria-label="Coș de cumpărături">
       <Cart class="h-6" />
-      <span class="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-600"></span>
+      <CartBadge client:load />
     </a>
     <div class="h-8 w-8"></div>
   </div>
