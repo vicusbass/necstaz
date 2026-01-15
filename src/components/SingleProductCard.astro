@@ -22,6 +22,8 @@ const { product } = Astro.props;
 const { _id: id, name, image, description, price } = product;
 
 const imageUrl = urlFor(image)?.width(800).url();
+// Smaller image for cart display (120px is the max cart image size on desktop)
+const cartImageUrl = urlFor(image)?.width(240).height(240).fit('max').url();
 ---
 
 <article class="product-card bg-white" data-product-id={id}>
@@ -67,7 +69,7 @@ const imageUrl = urlFor(image)?.width(800).url();
       productName={name}
       productPrice={price}
       itemType="product"
-      image={imageUrl}
+      image={cartImageUrl}
       class="mt-auto"
     />
   </div>
