@@ -116,8 +116,8 @@
   }
 
   .cart-item-image {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 90px;
     flex-shrink: 0;
     background: #f8f8f8;
     display: flex;
@@ -268,7 +268,7 @@
     }
 
     .cart-item-image {
-      width: 120px;
+      width: 80px;
       height: 120px;
     }
 
