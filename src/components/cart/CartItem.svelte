@@ -46,15 +46,6 @@
   <div class="cart-item-details">
     <div class="cart-item-info">
       <h3 class="cart-item-name">{item.name}</h3>
-      <p class="cart-item-type">
-        {#if item.type === 'product'}
-          Produs
-        {:else if item.type === 'bundle'}
-          Pachet
-        {:else}
-          Abonament
-        {/if}
-      </p>
     </div>
 
     <div class="cart-item-controls">
