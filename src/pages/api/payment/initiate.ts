@@ -6,6 +6,8 @@ import { loadQuery } from '../../../utils/loadQuery';
 import { cartValidationQuery } from '../../../queries/cart';
 import type { CartItem, Customer, PersonCustomer, CompanyCustomer } from '../../../types/cart';
 import { SGR_DEPOSIT } from '../../../config';
+import { createOrder, type CreateOrderParams } from '../../../lib/supabase';
+import type { OrderItem } from '../../../lib/database.types';
 
 interface SanityProduct {
   _id: string;
@@ -27,12 +29,6 @@ interface CartValidationResult {
   };
 }
 
-function generateOrderId(): string {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `NX-${timestamp}-${random}`;
-}
-
 function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -42,35 +38,6 @@ function validatePhone(phone: string): boolean {
   // Romanian phone format: +40xxx, 07xx, etc.
   const cleaned = phone.replace(/[\s-]/g, '');
   return /^(\+40|0)[0-9]{9,10}$/.test(cleaned);
-}
-
-// TODO: Replace with actual Supabase order persistence
-// import { createClient } from '@supabase/supabase-js';
-// const supabase = createClient(
-//   import.meta.env.SUPABASE_URL,
-//   import.meta.env.SUPABASE_ANON_KEY
-// );
-async function saveOrderToDatabase(orderData: {
-  orderId: string;
-  status: string;
-  customerType: string;
-  customer: Record<string, unknown>;
-  items: Array<{ id: string; type: string; name: string; price: number; quantity: number }>;
-  subtotal: number;
-  sgrDeposit: number;
-  total: number;
-  createdAt: string;
-}): Promise<void> {
-  // TODO: Implement Supabase order persistence
-  // const { error } = await supabase.from('orders').insert(orderData);
-  // if (error) throw error;
-
-  // For now, just log the order
-  console.log('Order created (mock):', orderData.orderId, {
-    total: orderData.total,
-    items: orderData.items.length,
-    customer: orderData.customer.email,
-  });
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -203,45 +170,100 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Generate order ID
-    const orderId = generateOrderId();
+    // Prepare order data for Supabase
+    const billingAddress = customer.sameAddress ? customer.deliveryAddress : customer.billingAddress;
 
-    // Prepare customer data
-    const customerData: Record<string, unknown> = {
-      email: customer.email,
-      phone: customer.phone,
-      deliveryAddress: customer.deliveryAddress,
-      billingAddress: customer.sameAddress ? customer.deliveryAddress : customer.billingAddress,
-    };
+    // Build customer name based on type
+    let customerName: string;
+    let billingName: string;
 
     if (customer.type === 'person') {
       const personCustomer = customer as PersonCustomer;
-      customerData.firstName = personCustomer.firstName;
-      customerData.lastName = personCustomer.lastName;
+      customerName = `${personCustomer.firstName} ${personCustomer.lastName}`;
+      billingName = customerName;
     } else {
       const companyCustomer = customer as CompanyCustomer;
-      customerData.companyName = companyCustomer.companyName;
-      customerData.cui = companyCustomer.cui;
-      customerData.contactPerson = companyCustomer.contactPerson;
+      customerName = companyCustomer.companyName;
+      billingName = companyCustomer.companyName;
     }
 
-    // Save order to database (Supabase)
-    try {
-      await saveOrderToDatabase({
-        orderId,
-        status: 'pending',
-        customerType: customer.type,
-        customer: customerData,
-        items: validatedItems,
+    // Build order items for database
+    const orderItems: OrderItem[] = validatedItems.map((item) => ({
+      product_id: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.price * item.quantity,
+    }));
+
+    // Prepare order params
+    const orderParams: CreateOrderParams = {
+      customer: {
+        email: customer.email,
+        phone: customer.phone,
+        name: customerName,
+        type: customer.type,
+        ...(customer.type === 'person'
+          ? {
+              firstName: (customer as PersonCustomer).firstName,
+              lastName: (customer as PersonCustomer).lastName,
+            }
+          : {
+              companyName: (customer as CompanyCustomer).companyName,
+              cui: (customer as CompanyCustomer).cui,
+              contactPerson: (customer as CompanyCustomer).contactPerson,
+            }),
+      },
+      billingAddress: {
+        name: billingName,
+        street: billingAddress.street,
+        city: billingAddress.city,
+        county: billingAddress.county,
+        postalCode: billingAddress.postalCode,
+        country: billingAddress.country || 'Romania',
+        ...(customer.type === 'company'
+          ? {
+              companyName: (customer as CompanyCustomer).companyName,
+              vatNumber: (customer as CompanyCustomer).cui,
+            }
+          : {}),
+      },
+      shippingAddress: {
+        name: customerName,
+        street: customer.deliveryAddress.street,
+        city: customer.deliveryAddress.city,
+        county: customer.deliveryAddress.county,
+        postalCode: customer.deliveryAddress.postalCode,
+        country: customer.deliveryAddress.country || 'Romania',
+        phone: customer.phone,
+      },
+      items: orderItems,
+      pricing: {
         subtotal,
-        sgrDeposit: sgrTotal,
+        taxAmount: sgrTotal, // SGR deposit stored as tax
         total,
-        createdAt: new Date().toISOString(),
-      });
+      },
+      paymentMethod: 'netopia',
+    };
+
+    // Save order to database (Supabase)
+    let orderNumber: string;
+    try {
+      const result = await createOrder(orderParams);
+      if (!result) {
+        throw new Error('Failed to create order - no result returned');
+      }
+      orderNumber = result.orderNumber;
+      console.log('Order created in Supabase:', orderNumber);
     } catch (dbError) {
       console.error('Failed to save order to database:', dbError);
-      // Continue anyway - we can still process the payment
-      // The IPN webhook will create/update the order if needed
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'A apărut o eroare la salvarea comenzii',
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     // TODO: Integrate with Netopia
@@ -261,8 +283,8 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({
           success: true,
-          orderId,
-          paymentUrl: `/payment/success?orderId=${orderId}&mock=true`,
+          orderNumber,
+          paymentUrl: `/payment/success?orderNumber=${orderNumber}&mock=true`,
           message: 'Netopia nu este configurat. Folosind flux de plată simulat.',
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -270,14 +292,14 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // TODO: Real Netopia integration here
-    // const netopiaResponse = await initiateNetopiaPayment(orderId, total, customer);
+    // const netopiaResponse = await initiateNetopiaPayment(orderNumber, total, customer);
     // return netopiaResponse.paymentUrl;
 
     return new Response(
       JSON.stringify({
         success: true,
-        orderId,
-        paymentUrl: `/payment/success?orderId=${orderId}`,
+        orderNumber,
+        paymentUrl: `/payment/success?orderNumber=${orderNumber}`,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

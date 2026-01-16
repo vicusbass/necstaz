@@ -144,3 +144,5 @@ CLAUDE.md
 .vercel
 
 **/.DS_Store
+
+.mcp.json

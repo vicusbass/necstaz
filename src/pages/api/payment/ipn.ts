@@ -2,6 +2,11 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
+import { updateOrderPaymentStatus } from '../../../lib/supabase';
+import type { Database } from '../../../lib/database.types';
+
+type OrderStatus = Database['public']['Enums']['order_status'];
+
 // Netopia payment status codes
 const NETOPIA_STATUS = {
   PENDING: 0,
@@ -42,42 +47,20 @@ interface NetopiaIPNPayload {
   };
 }
 
-function mapNetopiaStatusToOrderStatus(netopiaStatus: number): string {
+function mapNetopiaStatusToOrderStatus(netopiaStatus: number): { orderStatus: OrderStatus; paymentStatus: string } {
   switch (netopiaStatus) {
     case NETOPIA_STATUS.PAID:
     case NETOPIA_STATUS.PAID_PENDING:
     case NETOPIA_STATUS.CREDIT:
-      return 'paid';
+      return { orderStatus: 'confirmed', paymentStatus: 'paid' };
     case NETOPIA_STATUS.DECLINED:
     case NETOPIA_STATUS.ERROR:
-      return 'failed';
+      return { orderStatus: 'cancelled', paymentStatus: 'failed' };
     case NETOPIA_STATUS.CANCELED:
-      return 'cancelled';
+      return { orderStatus: 'cancelled', paymentStatus: 'cancelled' };
     default:
-      return 'pending';
+      return { orderStatus: 'pending', paymentStatus: 'pending' };
   }
-}
-
-// TODO: Replace with actual Supabase order update
-// import { createClient } from '@supabase/supabase-js';
-// const supabase = createClient(
-//   import.meta.env.SUPABASE_URL,
-//   import.meta.env.SUPABASE_ANON_KEY
-// );
-async function updateOrderStatus(
-  orderId: string,
-  status: string,
-  netopiaId?: string
-): Promise<void> {
-  // TODO: Implement Supabase order update
-  // const { error } = await supabase
-  //   .from('orders')
-  //   .update({ status, netopia_id: netopiaId, updated_at: new Date().toISOString() })
-  //   .eq('order_id', orderId);
-  // if (error) throw error;
-
-  // For now, just log the update
-  console.log(`Order ${orderId} updated (mock):`, { status, netopiaId });
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -98,33 +81,38 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('Received IPN:', JSON.stringify(payload, null, 2));
 
     // Extract order information
-    const orderId = payload.order?.orderID;
+    // orderID from Netopia is our order_number (e.g., "2026-000001")
+    const orderNumber = payload.order?.orderID;
     const netopiaId = payload.payment?.ntpID;
-    const paymentStatus = payload.payment?.status;
+    const netopiaStatus = payload.payment?.status;
 
-    if (!orderId) {
-      console.error('IPN missing orderId');
+    if (!orderNumber) {
+      console.error('IPN missing orderID (order number)');
       return new Response(
-        JSON.stringify({ errorType: 0, errorCode: '', errorMessage: 'Missing orderId' }),
+        JSON.stringify({ errorType: 0, errorCode: '', errorMessage: 'Missing orderID' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     // Map Netopia status to our order status
-    const orderStatus = mapNetopiaStatusToOrderStatus(paymentStatus);
+    const { orderStatus, paymentStatus } = mapNetopiaStatusToOrderStatus(netopiaStatus);
 
     // Update order in database (Supabase)
     try {
-      await updateOrderStatus(orderId, orderStatus, netopiaId);
-      console.log(`Order ${orderId} updated to status: ${orderStatus}`);
+      await updateOrderPaymentStatus(orderNumber, orderStatus, {
+        paymentStatus,
+        paymentReference: netopiaId,
+        paidAt: paymentStatus === 'paid' ? new Date().toISOString() : undefined,
+      });
+      console.log(`Order ${orderNumber} updated to status: ${orderStatus} (payment: ${paymentStatus})`);
     } catch (dbError) {
       console.error('Failed to update order in database:', dbError);
       // Don't fail the IPN response - Netopia needs confirmation
     }
 
     // TODO: Send confirmation email if payment succeeded
-    // if (orderStatus === 'paid') {
-    //   await sendOrderConfirmationEmail(orderId);
+    // if (paymentStatus === 'paid') {
+    //   await sendOrderConfirmationEmail(orderNumber);
     // }
 
     // Return success response to Netopia

@@ -55,10 +55,37 @@ const isMock = Astro.url.searchParams.get('mock') === 'true';
   // Clear cart after successful payment
   import { clearCart } from '../../stores/cart';
 
-  document.addEventListener('astro:page-load', () => {
-    // Clear the cart on success page load
+  // Only clear cart once when first landing on success page
+  // Use a flag to prevent clearing on subsequent navigations
+  const CART_CLEARED_KEY = 'necstaz_cart_cleared';
+
+  function clearCartOnce() {
+    // Check if we're actually on the success page
+    if (!window.location.pathname.includes('/payment/success')) {
+      return;
+    }
+
+    // Check if cart was already cleared for this order
+    const orderNumber = new URLSearchParams(window.location.search).get('orderNumber');
+    const clearedOrder = sessionStorage.getItem(CART_CLEARED_KEY);
+
+    if (orderNumber && clearedOrder === orderNumber) {
+      // Cart already cleared for this order, skip
+      return;
+    }
+
+    // Clear the cart and mark as cleared
     clearCart();
-  });
+    if (orderNumber) {
+      sessionStorage.setItem(CART_CLEARED_KEY, orderNumber);
+    }
+  }
+
+  // Run on initial page load
+  clearCartOnce();
+
+  // Also handle View Transitions navigation back to this page
+  document.addEventListener('astro:page-load', clearCartOnce);
 </script>
 
 <style>

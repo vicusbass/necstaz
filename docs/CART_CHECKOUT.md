@@ -182,33 +182,173 @@ Netopia IPN (Instant Payment Notification) webhook:
 
 ## Database Integration (Supabase)
 
-Order persistence is handled via Supabase (currently mock implementation).
+Order persistence is handled via Supabase with Row Level Security (RLS).
 
-### Order Data Structure
+### Setup Complete
+
+The Supabase integration is fully configured:
+
+- **Client**: `src/lib/supabase.ts` - Uses service role key for server-side operations
+- **Types**: `src/lib/database.types.ts` - TypeScript types matching the database schema
+- **API Integration**: Orders are created in `/api/payment/initiate.ts` and updated in `/api/payment/ipn.ts`
+
+### Environment Variables
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+**Important**: The service role key bypasses RLS and should only be used server-side.
+
+### Orders Table Schema
+
+```sql
+CREATE TYPE order_status AS ENUM (
+  'pending',
+  'confirmed',
+  'processing',
+  'sent',
+  'delivered',
+  'cancelled',
+  'refunded'
+);
+
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number TEXT UNIQUE NOT NULL,
+
+  -- Customer info
+  customer_name TEXT NOT NULL,
+  customer_email TEXT NOT NULL,
+  customer_phone TEXT,
+
+  -- Billing address
+  billing_name TEXT NOT NULL,
+  billing_street TEXT NOT NULL,
+  billing_city TEXT NOT NULL,
+  billing_county TEXT,
+  billing_postal_code TEXT NOT NULL,
+  billing_country TEXT NOT NULL DEFAULT 'Romania',
+  billing_company_name TEXT,
+  billing_vat_number TEXT,
+  billing_registration_number TEXT,
+
+  -- Shipping address
+  shipping_name TEXT NOT NULL,
+  shipping_street TEXT NOT NULL,
+  shipping_city TEXT NOT NULL,
+  shipping_county TEXT,
+  shipping_postal_code TEXT NOT NULL,
+  shipping_country TEXT NOT NULL DEFAULT 'Romania',
+  shipping_phone TEXT,
+  shipping_notes TEXT,
+
+  -- Order details
+  items JSONB NOT NULL DEFAULT '[]',
+  subtotal NUMERIC(10,2) NOT NULL,
+  shipping_cost NUMERIC(10,2) NOT NULL DEFAULT 0,
+  discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+  discount_code TEXT,
+  tax_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+  total_amount NUMERIC(10,2) NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'RON',
+
+  -- Status & payment
+  status order_status NOT NULL DEFAULT 'pending',
+  payment_method TEXT,
+  payment_status TEXT,
+  payment_reference TEXT,
+  paid_at TIMESTAMPTZ,
+
+  -- Shipping tracking
+  courier_name TEXT,
+  awb_number TEXT,
+  tracking_url TEXT,
+  shipped_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+
+  -- Admin
+  internal_notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### Order Number Generation
+
+Auto-generated order numbers (e.g., "2026-000001") via database trigger:
+
+```sql
+CREATE OR REPLACE FUNCTION generate_order_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.order_number := to_char(now(), 'YYYY') || '-' ||
+    lpad(nextval('order_number_seq')::text, 6, '0');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = public;
+
+CREATE TRIGGER set_order_number
+  BEFORE INSERT ON orders
+  FOR EACH ROW
+  WHEN (NEW.order_number IS NULL)
+  EXECUTE FUNCTION generate_order_number();
+```
+
+### Row Level Security (RLS)
+
+RLS is enabled with these policies:
+
+```sql
+-- Enable RLS
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Service role has full access (for API routes)
+CREATE POLICY "Service role full access"
+  ON orders FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+-- Authenticated users can view orders (for admin dashboard)
+CREATE POLICY "Authenticated users can view orders"
+  ON orders FOR SELECT
+  TO authenticated
+  USING (true);
+```
+
+**Note**: Public/anonymous users cannot read or write orders. All order operations go through server-side API routes using the service role key.
+
+### Order Items Structure (JSONB)
 
 ```typescript
-{
-  orderId: string;           // e.g., "NX-XXXXX-XXXX"
-  status: string;            // pending, paid, failed, cancelled
-  customerType: string;      // person, company
-  customer: object;          // nested customer data
-  items: array;              // order items
-  subtotal: number;          // price without SGR
-  sgrDeposit: number;        // SGR deposit amount
-  total: number;             // final total
-  netopiaId?: string;        // Netopia transaction ID
-  createdAt: string;         // ISO timestamp
+interface OrderItem {
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  sku?: string;
+  variant?: string;
+  image_url?: string;
 }
 ```
 
-### TODO: Supabase Setup
+### Helper Functions
 
-1. Create a Supabase project
-2. Create an `orders` table with the structure above
-3. Add environment variables:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-4. Uncomment the Supabase client code in the API endpoints
+Located in `src/lib/supabase.ts`:
+
+- `createOrder(params)` - Create a new order, returns order ID and order number
+- `updateOrderPaymentStatus(orderNumber, status, details)` - Update payment status (called by IPN)
+- `updateOrderShipping(orderNumber, details)` - Add AWB/tracking info
+- `getOrderByNumber(orderNumber)` - Fetch order by order number
+
+### Viewing Orders
+
+Access orders in the Supabase dashboard:
+1. Go to **Table Editor** → **orders**
+2. Or use **SQL Editor** to run queries
 
 ## Sanity Integration (Read-Only)
 
@@ -243,9 +383,9 @@ Sanity is used only for **reading product data** (prices, descriptions). Orders 
 Add these to your `.env` file:
 
 ```env
-# Supabase (for order persistence)
+# Supabase (for order persistence) - CONFIGURED
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Netopia Payment Gateway
 # Get from: Netopia admin panel
@@ -258,16 +398,16 @@ NETOPIA_RETURN_URL=https://your-domain.com/payment/success
 NETOPIA_CONFIRM_URL=https://your-domain.com/api/payment/ipn
 ```
 
-### Supabase Setup
+### Supabase Setup - COMPLETE
 
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Create an `orders` table with appropriate columns
-3. Set up Row Level Security (RLS) policies
-4. Add the environment variables above
-5. Install the Supabase client: `npm install @supabase/supabase-js`
-6. Uncomment the Supabase code in:
-   - `src/pages/api/payment/initiate.ts`
-   - `src/pages/api/payment/ipn.ts`
+- [x] Create a Supabase project
+- [x] Create `orders` table with appropriate columns
+- [x] Set up Row Level Security (RLS) policies
+- [x] Add environment variables
+- [x] Install the Supabase client: `npm install @supabase/supabase-js`
+- [x] Integrate Supabase in API endpoints
+
+See the "Database Integration (Supabase)" section above for full details.
 
 ### Netopia Integration
 

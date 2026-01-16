@@ -58,26 +58,7 @@ export interface CompanyCustomer {
 
 export type Customer = PersonCustomer | CompanyCustomer;
 
-// Order types (for Sanity)
-export type OrderStatus = 'pending' | 'paid' | 'failed' | 'cancelled';
-
-export interface OrderItem {
-  id: string;
-  type: CartItemType;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-export interface Order {
-  orderId: string;
-  status: OrderStatus;
-  customer: Customer;
-  items: OrderItem[];
-  total: number;
-  netopiaId?: string;
-  createdAt: string;
-}
+// Note: Order types (OrderStatus, OrderItem, Order) are now in src/lib/database.types.ts
 
 // Payment types
 export interface PaymentInitRequest {
@@ -89,7 +70,7 @@ export interface PaymentInitRequest {
 export interface PaymentInitResponse {
   success: boolean;
   paymentUrl?: string;
-  orderId?: string;
+  orderNumber?: string;
   error?: string;
 }
 
