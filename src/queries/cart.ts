@@ -11,7 +11,13 @@ export const cartValidationQuery = groq`{
     "bundles": bundles[slug.current in $bundleSlugs]{
       "id": slug.current,
       name,
-      price
+      bottleCount,
+      wineDiscounts[]{
+        "productId": product->_id,
+        "productName": product->name,
+        "basePrice": product->price,
+        discountPercent
+      }
     },
     subscriptionPrice
   }

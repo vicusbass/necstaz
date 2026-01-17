@@ -4,8 +4,8 @@ export const prerender = false;
 
 import { loadQuery } from '../../../utils/loadQuery';
 import { cartValidationQuery } from '../../../queries/cart';
-import type { CartItem, Customer, PersonCustomer, CompanyCustomer } from '../../../types/cart';
-import { SGR_DEPOSIT } from '../../../config';
+import type { CartItem, Customer, PersonCustomer, CompanyCustomer, AnyCartItem, BundleCartItem } from '../../../types/cart';
+import { SGR_DEPOSIT, PACKAGE_BOTTLE_COUNT } from '../../../config';
 import { createOrder, type CreateOrderParams } from '../../../lib/supabase';
 import type { OrderItem } from '../../../lib/database.types';
 
@@ -15,10 +15,18 @@ interface SanityProduct {
   price: number;
 }
 
+interface SanityWineDiscount {
+  productId: string;
+  productName: string;
+  basePrice: number;
+  discountPercent: number;
+}
+
 interface SanityBundle {
   id: string;
   name: string;
-  price: number;
+  bottleCount: number;
+  wineDiscounts: SanityWineDiscount[];
 }
 
 interface CartValidationResult {
@@ -27,6 +35,11 @@ interface CartValidationResult {
     bundles: SanityBundle[];
     subscriptionPrice: number;
   };
+}
+
+// Type guard for bundle cart items
+function isBundleCartItem(item: AnyCartItem): item is BundleCartItem {
+  return item.type === 'bundle' && 'selections' in item;
 }
 
 function validateEmail(email: string): boolean {
@@ -45,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { customer, cartItems } = body as {
       customer: Customer;
-      cartItems: CartItem[];
+      cartItems: AnyCartItem[];
     };
 
     // Validate request
@@ -81,8 +94,14 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Extract IDs for products and slugs for bundles
-    const productIds = cartItems.filter((i) => i.type === 'product').map((i) => i.id);
-    const bundleSlugs = cartItems.filter((i) => i.type === 'bundle').map((i) => i.id);
+    const productIds = cartItems
+      .filter((i): i is CartItem => i.type === 'product')
+      .map((i) => i.id);
+
+    // For configured bundles, extract the bundleSlug
+    const bundleSlugs = cartItems
+      .filter((i): i is BundleCartItem => isBundleCartItem(i))
+      .map((i) => i.bundleSlug);
 
     // Fetch current prices from Sanity - CRITICAL SECURITY STEP
     const { data } = await loadQuery<CartValidationResult>({
@@ -100,49 +119,142 @@ export const POST: APIRoute = async ({ request }) => {
       name: string;
       price: number;
       quantity: number;
+      bundleDetails?: {
+        bundleSlug: string;
+        bottleCount: number;
+        selections: Array<{
+          productId: string;
+          productName: string;
+          quantity: number;
+          discountPercent: number;
+          unitPrice: number;
+          totalPrice: number;
+        }>;
+      };
     }> = [];
     let subtotal = 0;
     let bottleCount = 0;
     const errors: string[] = [];
 
     for (const item of cartItems) {
-      let serverPrice: number | null = null;
-
       if (item.type === 'product') {
-        const sanityProduct = data?.products?.find((p) => p._id === item.id);
+        const cartItem = item as CartItem;
+        const sanityProduct = data?.products?.find((p) => p._id === cartItem.id);
         if (sanityProduct) {
-          serverPrice = sanityProduct.price;
-          bottleCount += item.quantity; // Count bottles for SGR
+          validatedItems.push({
+            id: cartItem.id,
+            type: cartItem.type,
+            name: cartItem.name,
+            price: sanityProduct.price,
+            quantity: cartItem.quantity,
+          });
+          subtotal += sanityProduct.price * cartItem.quantity;
+          bottleCount += cartItem.quantity; // Count bottles for SGR
         } else {
-          errors.push(`Produsul "${item.name}" nu a fost găsit`);
-          continue;
+          errors.push(`Produsul "${cartItem.name}" nu a fost găsit`);
         }
-      } else if (item.type === 'bundle') {
-        const sanityBundle = data?.shop?.bundles?.find((b) => b.id === item.id);
-        if (sanityBundle) {
-          serverPrice = sanityBundle.price;
-        } else {
+      } else if (isBundleCartItem(item)) {
+        // Configured bundle - validate selections against server-side prices
+        const sanityBundle = data?.shop?.bundles?.find((b) => b.id === item.bundleSlug);
+        if (!sanityBundle) {
           errors.push(`Pachetul "${item.name}" nu a fost găsit`);
           continue;
         }
-      } else if (item.type === 'subscription') {
-        if (data?.shop?.subscriptionPrice != null) {
-          serverPrice = data.shop.subscriptionPrice;
-        } else {
-          errors.push('Abonamentul nu este disponibil');
+
+        // Validate total bottles match bundle requirement
+        const totalBundleBottles = item.selections.reduce((sum, sel) => sum + sel.quantity, 0);
+        if (totalBundleBottles !== sanityBundle.bottleCount) {
+          errors.push(
+            `Pachetul "${item.name}" necesită ${sanityBundle.bottleCount} sticle, dar are ${totalBundleBottles}`
+          );
           continue;
         }
-      }
 
-      if (serverPrice != null) {
+        // Validate each wine selection and recalculate price server-side
+        let bundleTotal = 0;
+        const validatedSelections: Array<{
+          productId: string;
+          productName: string;
+          quantity: number;
+          discountPercent: number;
+          unitPrice: number;
+          totalPrice: number;
+        }> = [];
+
+        for (const selection of item.selections) {
+          const wineDiscount = sanityBundle.wineDiscounts.find(
+            (w) => w.productId === selection.productId
+          );
+
+          if (!wineDiscount) {
+            errors.push(
+              `Vinul "${selection.productName}" nu este disponibil în pachetul "${item.name}"`
+            );
+            continue;
+          }
+
+          // Server-side price calculation
+          const serverDiscountedPrice = wineDiscount.basePrice * (1 - wineDiscount.discountPercent / 100);
+          const lineTotal = serverDiscountedPrice * selection.quantity;
+          bundleTotal += lineTotal;
+
+          validatedSelections.push({
+            productId: selection.productId,
+            productName: wineDiscount.productName,
+            quantity: selection.quantity,
+            discountPercent: wineDiscount.discountPercent,
+            unitPrice: serverDiscountedPrice,
+            totalPrice: lineTotal,
+          });
+
+          // Count bottles for SGR
+          bottleCount += selection.quantity;
+        }
+
         validatedItems.push({
           id: item.id,
-          type: item.type,
+          type: 'bundle',
           name: item.name,
-          price: serverPrice,
-          quantity: item.quantity,
+          price: bundleTotal,
+          quantity: 1,
+          bundleDetails: {
+            bundleSlug: item.bundleSlug,
+            bottleCount: totalBundleBottles,
+            selections: validatedSelections,
+          },
         });
-        subtotal += serverPrice * item.quantity;
+        subtotal += bundleTotal;
+      } else if (item.type === 'package') {
+        // Package items - count as PACKAGE_BOTTLE_COUNT (4) bottles each
+        const cartItem = item as CartItem;
+        const sanityProduct = data?.products?.find((p) => p._id === cartItem.id);
+        if (sanityProduct) {
+          validatedItems.push({
+            id: cartItem.id,
+            type: cartItem.type,
+            name: cartItem.name,
+            price: sanityProduct.price,
+            quantity: cartItem.quantity,
+          });
+          subtotal += sanityProduct.price * cartItem.quantity;
+          bottleCount += cartItem.quantity * PACKAGE_BOTTLE_COUNT; // 4 bottles per package
+        } else {
+          errors.push(`Pachetul \"${cartItem.name}\" nu a fost găsit`);
+        }
+      } else if (item.type === 'subscription') {
+        const cartItem = item as CartItem;
+        if (data?.shop?.subscriptionPrice != null) {
+          validatedItems.push({
+            id: cartItem.id,
+            type: cartItem.type,
+            name: cartItem.name,
+            price: data.shop.subscriptionPrice,
+            quantity: cartItem.quantity,
+          });
+          subtotal += data.shop.subscriptionPrice * cartItem.quantity;
+        } else {
+          errors.push('Abonamentul nu este disponibil');
+        }
       }
     }
 

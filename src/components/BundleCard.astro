@@ -1,14 +1,25 @@
 ---
 import { Image } from 'astro:assets';
 import rectangle from '../assets/shop/rectangle.svg';
-import AddToCartButton from './cart/AddToCartButton.svelte';
+import ConfigureBundleButton from './bundle/ConfigureBundleButton.svelte';
+import type { BundleConfig } from '../types/cart';
+import { urlFor } from '../utils/sanity';
+
+interface WineDiscount {
+  productId: string;
+  productName: string;
+  basePrice: number;
+  discountPercent: number;
+  image?: any;
+}
 
 interface Bundle {
   name: string;
   slug: { current: string };
   heroName: string;
   description: string;
-  price: number;
+  bottleCount: number;
+  wineDiscounts: WineDiscount[];
 }
 
 interface Props {
@@ -17,7 +28,23 @@ interface Props {
 }
 
 const { bundle, icon } = Astro.props;
-const { name, description, price, slug } = bundle;
+const { name, description, bottleCount, slug, wineDiscounts } = bundle;
+
+// Build BundleConfig for the configurator with image URLs
+const bundleConfig: BundleConfig = {
+  slug: slug.current,
+  name,
+  heroName: bundle.heroName,
+  description,
+  bottleCount,
+  wineDiscounts: (wineDiscounts ?? []).map((w) => ({
+    productId: w.productId,
+    productName: w.productName,
+    basePrice: w.basePrice,
+    discountPercent: w.discountPercent,
+    image: w.image ? (typeof w.image === 'string' ? w.image : urlFor(w.image)?.width(120).height(180).url()) : undefined,
+  })),
+};
 ---
 
 <div class="flex flex-col py-12 lg:py-20" data-bundle-slug={slug.current}>
@@ -50,16 +77,13 @@ const { name, description, price, slug } = bundle;
     </div>
 
     <div class="flex flex-col items-center gap-4">
-      <p class="text-base font-bold text-black lg:text-lg">
-        {price.toFixed(2).replace('.', ',')} lei
+      <p class="text-sm text-gray lg:text-base">
+        {bottleCount} sticle
       </p>
 
-      <AddToCartButton
+      <ConfigureBundleButton
         client:visible
-        productId={slug.current}
-        productName={name}
-        productPrice={price}
-        itemType="bundle"
+        bundleConfig={bundleConfig}
       />
     </div>
   </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CartItem } from '../../types/cart';
   import { updateQuantity, removeFromCart, formatPrice } from '../../stores/cart';
-  import { SGR_DEPOSIT } from '../../config';
+  import { SGR_DEPOSIT, PACKAGE_BOTTLE_COUNT } from '../../config';
 
   interface Props {
     item: CartItem;
@@ -27,7 +27,11 @@
 
   const lineTotal = $derived(item.price * item.quantity);
   const isProduct = $derived(item.type === 'product');
-  const sgrAmount = $derived(isProduct ? SGR_DEPOSIT * item.quantity : 0);
+  const isPackage = $derived(item.type === 'package');
+  const hasBottles = $derived(isProduct || isPackage);
+  // Products have 1 bottle, packages have 4 bottles
+  const bottleMultiplier = $derived(isPackage ? PACKAGE_BOTTLE_COUNT : 1);
+  const sgrAmount = $derived(hasBottles ? SGR_DEPOSIT * item.quantity * bottleMultiplier : 0);
 </script>
 
 <article class="cart-item">
@@ -73,11 +77,9 @@
 
       <div class="cart-item-price">
         <span class="price-value">{formatPrice(lineTotal)}</span>
-        {#if item.quantity > 1}
-          <span class="price-unit">{formatPrice(item.price)} / buc</span>
-        {/if}
-        {#if isProduct}
-          <span class="price-sgr">Garanție SGR: {formatPrice(sgrAmount)}</span>
+        <span class="price-unit">{formatPrice(item.price)} / buc</span>
+        {#if hasBottles}
+          <span class="price-sgr">Garanție: {formatPrice(sgrAmount)}</span>
         {/if}
       </div>
     </div>

@@ -1,6 +1,11 @@
 import { atom, computed } from 'nanostores';
-import type { CartItem, CartState } from '../types/cart';
-import { SGR_DEPOSIT } from '../config';
+import type { CartItem, CartState, AnyCartItem, BundleCartItem, BundleWineSelection } from '../types/cart';
+import { SGR_DEPOSIT, PACKAGE_BOTTLE_COUNT } from '../config';
+
+// Type guard to check if an item is a BundleCartItem
+export function isBundleCartItem(item: AnyCartItem): item is BundleCartItem {
+  return item.type === 'bundle' && 'selections' in item;
+}
 
 const CART_STORAGE_KEY = 'necstaz_cart';
 
@@ -61,21 +66,42 @@ export function subscribeToCartChanges(): void {
 // Computed: cart items array
 export const cartItems = computed(cartState, (state) => state.items);
 
-// Computed: total item count
+// Computed: total item count (bundles count as 1 item each)
 export const cartCount = computed(cartState, (state) =>
-  state.items.reduce((sum, item) => sum + item.quantity, 0)
+  state.items.reduce((sum, item) => {
+    if (isBundleCartItem(item)) {
+      return sum + 1; // Bundle counts as 1 item
+    }
+    return sum + item.quantity;
+  }, 0)
 );
 
 // Computed: total price without SGR (client-side, for display only)
 export const cartSubtotal = computed(cartState, (state) =>
-  state.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  state.items.reduce((sum, item) => {
+    if (isBundleCartItem(item)) {
+      return sum + item.totalPrice;
+    }
+    return sum + item.price * item.quantity;
+  }, 0)
 );
 
-// Computed: count of wine bottles (products only, for SGR calculation)
+// Computed: count of wine bottles (products + packages + bundle wines, for SGR calculation)
 export const bottleCount = computed(cartState, (state) =>
-  state.items
-    .filter((item) => item.type === 'product')
-    .reduce((sum, item) => sum + item.quantity, 0)
+  state.items.reduce((sum, item) => {
+    if (item.type === 'product') {
+      return sum + item.quantity;
+    }
+    if (item.type === 'package') {
+      // Packages contain 4 bottles each
+      return sum + item.quantity * PACKAGE_BOTTLE_COUNT;
+    }
+    if (isBundleCartItem(item)) {
+      // Count all bottles in the bundle
+      return sum + item.selections.reduce((s, sel) => s + sel.quantity, 0);
+    }
+    return sum;
+  }, 0)
 );
 
 // Computed: total SGR deposit
@@ -83,10 +109,24 @@ export const sgrTotal = computed(bottleCount, (count) => count * SGR_DEPOSIT);
 
 // Computed: total price including SGR (client-side, for display only)
 export const cartTotal = computed(cartState, (state) => {
-  const subtotal = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const bottles = state.items
-    .filter((item) => item.type === 'product')
-    .reduce((sum, item) => sum + item.quantity, 0);
+  let subtotal = 0;
+  let bottles = 0;
+
+  for (const item of state.items) {
+    if (isBundleCartItem(item)) {
+      subtotal += item.totalPrice;
+      bottles += item.selections.reduce((s, sel) => s + sel.quantity, 0);
+    } else if (item.type === 'product') {
+      subtotal += item.price * item.quantity;
+      bottles += item.quantity;
+    } else if (item.type === 'package') {
+      subtotal += item.price * item.quantity;
+      bottles += item.quantity * PACKAGE_BOTTLE_COUNT;
+    } else {
+      subtotal += item.price * item.quantity;
+    }
+  }
+
   return subtotal + bottles * SGR_DEPOSIT;
 });
 
@@ -136,6 +176,37 @@ export function updateQuantity(id: string, type: CartItem['type'], quantity: num
 
 export function clearCart(): void {
   cartState.set({ items: [], lastUpdated: Date.now() });
+}
+
+// Bundle-specific actions
+export function addBundleToCart(bundle: BundleCartItem): void {
+  const current = cartState.get();
+  const newItems = [...current.items, bundle];
+  cartState.set({ items: newItems, lastUpdated: Date.now() });
+}
+
+export function updateBundleInCart(bundleId: string, selections: BundleWineSelection[]): void {
+  const current = cartState.get();
+  const newItems = current.items.map((item) => {
+    if (item.id === bundleId && isBundleCartItem(item)) {
+      const totalPrice = selections.reduce((sum, sel) => sum + sel.discountedPrice * sel.quantity, 0);
+      const bottleCount = selections.reduce((sum, sel) => sum + sel.quantity, 0);
+      return {
+        ...item,
+        selections,
+        totalPrice,
+        bottleCount,
+      };
+    }
+    return item;
+  });
+  cartState.set({ items: newItems, lastUpdated: Date.now() });
+}
+
+export function removeBundleFromCart(bundleId: string): void {
+  const current = cartState.get();
+  const newItems = current.items.filter((item) => item.id !== bundleId);
+  cartState.set({ items: newItems, lastUpdated: Date.now() });
 }
 
 // Toast notification state

@@ -2,16 +2,69 @@
 import Layout from '../layouts/Layout.astro';
 import CartList from '../components/cart/CartList.svelte';
 import CartSummary from '../components/cart/CartSummary.svelte';
-import { client } from '../utils/sanity';
+import BundleConfigurator from '../components/bundle/BundleConfigurator.svelte';
+import { client, urlFor } from '../utils/sanity';
+import type { BundleConfig } from '../types/cart';
 
-// Fetch shipping configuration from Sanity
+// Fetch shipping configuration and bundle configs from Sanity
 const shopData = await client.fetch<{
   shippingPrice: number;
   freeShippingThreshold: number;
-} | null>(`*[_type == "shop"][0]{ shippingPrice, freeShippingThreshold }`);
+  bundles: Array<{
+    name: string;
+    slug: { current: string };
+    heroName: string;
+    description: string;
+    bottleCount: number;
+    wineDiscounts: Array<{
+      productId: string;
+      productName: string;
+      basePrice: number;
+      discountPercent: number;
+      image?: any;
+    }>;
+  }>;
+} | null>(`*[_type == "shop"][0]{
+  shippingPrice,
+  freeShippingThreshold,
+  bundles[]{
+    name,
+    slug,
+    heroName,
+    description,
+    bottleCount,
+    wineDiscounts[]{
+      "productId": product->_id,
+      "productName": product->name,
+      "basePrice": product->price,
+      "image": product->image,
+      discountPercent
+    }
+  }
+}`);
 
 const shippingPrice = shopData?.shippingPrice ?? 0;
 const freeShippingThreshold = shopData?.freeShippingThreshold ?? 0;
+
+// Transform bundles to BundleConfig format with image URLs
+const bundleConfigs: BundleConfig[] = (shopData?.bundles ?? [])
+  .filter((b) => b && b.slug && b.wineDiscounts)
+  .map((b) => ({
+    slug: b.slug.current,
+    name: b.name,
+    heroName: b.heroName,
+    description: b.description,
+    bottleCount: b.bottleCount,
+    wineDiscounts: (b.wineDiscounts ?? [])
+      .filter((w) => w && w.productId)
+      .map((w) => ({
+        productId: w.productId,
+        productName: w.productName,
+        basePrice: w.basePrice,
+        discountPercent: w.discountPercent,
+        image: w.image ? urlFor(w.image)?.width(120).height(180).url() : undefined,
+      })),
+  }));
 ---
 
 <Layout title="Coș de cumpărături | Nextaz">
@@ -22,7 +75,7 @@ const freeShippingThreshold = shopData?.freeShippingThreshold ?? 0;
 
     <div class="cart-content">
       <div class="cart-items-section">
-        <CartList client:load />
+        <CartList client:load bundleConfigs={bundleConfigs} />
       </div>
       <aside class="cart-summary-section">
         <CartSummary
@@ -33,6 +86,9 @@ const freeShippingThreshold = shopData?.freeShippingThreshold ?? 0;
       </aside>
     </div>
   </section>
+
+  <!-- Bundle Configurator Modal for editing bundles -->
+  <BundleConfigurator client:load />
 </Layout>
 
 <style>

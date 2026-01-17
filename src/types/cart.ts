@@ -10,8 +10,49 @@ export interface CartItem {
   image?: string; // Optional image URL for cart display
 }
 
+// Wine selection within a configured bundle
+export interface BundleWineSelection {
+  productId: string; // Sanity _id of the wine product
+  productName: string;
+  basePrice: number; // Original wine price
+  discountPercent: number; // Discount from bundle config
+  discountedPrice: number; // Calculated: basePrice * (1 - discountPercent/100)
+  quantity: number; // Number of bottles selected
+  image?: string;
+}
+
+// Bundle configuration from Sanity
+export interface BundleConfig {
+  slug: string; // bundle-1, bundle-2, bundle-3
+  name: string;
+  heroName: string;
+  description: string;
+  bottleCount: number; // Required total bottles (60, 120, 180)
+  wineDiscounts: Array<{
+    productId: string;
+    productName: string;
+    basePrice: number;
+    discountPercent: number;
+    image?: string;
+  }>;
+}
+
+// Configured bundle item in cart
+export interface BundleCartItem {
+  id: string; // Unique ID for this cart item
+  type: 'bundle';
+  bundleSlug: string; // bundle-1, bundle-2, bundle-3
+  name: string; // Bundle display name
+  bottleCount: number; // Total bottles in this bundle
+  selections: BundleWineSelection[]; // Only wines with quantity > 0
+  totalPrice: number; // Calculated sum of discounted prices * quantities
+}
+
+// Union type for all cart item types
+export type AnyCartItem = CartItem | BundleCartItem;
+
 export interface CartState {
-  items: CartItem[];
+  items: AnyCartItem[];
   lastUpdated: number;
 }
 

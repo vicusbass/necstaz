@@ -65,22 +65,65 @@ export const shop = defineType({
               validation: (rule) => rule.required(),
             }),
             defineField({
-              name: 'price',
-              title: 'Pret',
+              name: 'bottleCount',
+              title: 'Numar sticle',
               type: 'number',
-              description: 'Pret in LEI',
-              validation: (rule) => rule.required().positive().precision(2),
+              description: 'Numarul minim de sticle pentru acest pachet (ex: 60, 120, 180)',
+              validation: (rule) => rule.required().positive().integer(),
+            }),
+            defineField({
+              name: 'wineDiscounts',
+              title: 'Reduceri pe vin',
+              type: 'array',
+              description: 'Procentul de reducere pentru fiecare vin din catalog',
+              validation: (rule) => rule.required(),
+              of: [
+                defineArrayMember({
+                  type: 'object',
+                  fields: [
+                    defineField({
+                      name: 'product',
+                      title: 'Produs (Vin)',
+                      type: 'reference',
+                      to: [{type: 'product'}],
+                      options: {
+                        filter: 'productType == "single"',
+                      },
+                      validation: (rule) => rule.required(),
+                    }),
+                    defineField({
+                      name: 'discountPercent',
+                      title: 'Procent reducere (%)',
+                      type: 'number',
+                      description: 'Procentul de reducere (ex: 10 pentru 10%)',
+                      validation: (rule) => rule.required().min(0).max(100),
+                    }),
+                  ],
+                  preview: {
+                    select: {
+                      productName: 'product.name',
+                      discount: 'discountPercent',
+                    },
+                    prepare({productName, discount}) {
+                      return {
+                        title: productName || 'Vin neselectat',
+                        subtitle: `${discount || 0}% reducere`,
+                      }
+                    },
+                  },
+                }),
+              ],
             }),
           ],
           preview: {
             select: {
               title: 'name',
-              price: 'price',
+              bottleCount: 'bottleCount',
             },
-            prepare({title, price}) {
+            prepare({title, bottleCount}) {
               return {
                 title,
-                subtitle: `${price?.toFixed(2) || '0.00'} LEI`,
+                subtitle: `${bottleCount || 0} sticle`,
               }
             },
           },

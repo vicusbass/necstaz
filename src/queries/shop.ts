@@ -17,7 +17,14 @@ export const shopQuery = groq`
       slug,
       heroName,
       description,
-      price
+      bottleCount,
+      wineDiscounts[]{
+        "productId": product->_id,
+        "productName": product->name,
+        "basePrice": product->price,
+        "image": product->image,
+        discountPercent
+      }
     },
     customProductPrice,
     subscriptionPrice

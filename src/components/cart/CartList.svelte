@@ -1,15 +1,23 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { CartItem as CartItemType } from '../../types/cart';
+  import type { AnyCartItem, BundleConfig } from '../../types/cart';
   import {
     cartItems,
     isCartEmpty,
     initializeCart,
     subscribeToCartChanges,
+    isBundleCartItem,
   } from '../../stores/cart';
   import CartItem from './CartItem.svelte';
+  import BundleCartItem from './BundleCartItem.svelte';
 
-  let items = $state<CartItemType[]>([]);
+  interface Props {
+    bundleConfigs?: BundleConfig[];
+  }
+
+  let { bundleConfigs = [] }: Props = $props();
+
+  let items = $state<AnyCartItem[]>([]);
   let empty = $state(true);
 
   onMount(() => {
@@ -48,7 +56,11 @@
   {:else}
     <div class="cart-items">
       {#each items as item (item.id + item.type)}
-        <CartItem {item} />
+        {#if isBundleCartItem(item)}
+          <BundleCartItem {item} {bundleConfigs} />
+        {:else}
+          <CartItem {item} />
+        {/if}
       {/each}
     </div>
   {/if}

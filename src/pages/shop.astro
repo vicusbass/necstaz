@@ -10,9 +10,11 @@ import notebook from '../assets/shop/notebook.png';
 import triangle from '../assets/shop/silver.png';
 import { loadQuery } from '../utils/loadQuery';
 import { shopQuery } from '../queries/shop';
+import { urlFor } from '../utils/sanity';
 import SingleProductCard from '../components/SingleProductCard.astro';
 import PackageProductCard from '../components/PackageProductCard.astro';
 import BundleCard from '../components/BundleCard.astro';
+import BundleConfigurator from '../components/bundle/BundleConfigurator.svelte';
 import AddToCartButton from '../components/cart/AddToCartButton.svelte';
 
 interface Product {
@@ -25,12 +27,21 @@ interface Product {
   price: number;
 }
 
+interface WineDiscount {
+  productId: string;
+  productName: string;
+  basePrice: number;
+  discountPercent: number;
+  image?: any;
+}
+
 interface Bundle {
   name: string;
   slug: { current: string };
   heroName: string;
   description: string;
-  price: number;
+  bottleCount: number;
+  wineDiscounts: WineDiscount[];
 }
 
 interface Shop {
@@ -51,14 +62,27 @@ const subscriptionPrice = shop?.subscriptionPrice ?? 0;
 const singleProducts = products.filter((p) => p.productType === 'single');
 const packages = products.filter((p) => p.productType === 'package' || p.productType === 'bundle');
 
-// Sort bundles by slug to match the order: bundle-60, bundle-120, bundle-180
-const sortedBundles = [...bundles].sort((a, b) => a.slug.current.localeCompare(b.slug.current));
+// Sort bundles by extracting the number from slug (bundle-1, bundle-2, bundle-3)
+// and transform image objects to URLs
+const sortedBundles = [...bundles]
+  .sort((a, b) => {
+    const numA = parseInt(a.slug.current.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.slug.current.replace(/\D/g, ''), 10) || 0;
+    return numA - numB;
+  })
+  .map((bundle) => ({
+    ...bundle,
+    wineDiscounts: (bundle.wineDiscounts ?? []).map((w) => ({
+      ...w,
+      image: w.image ? urlFor(w.image)?.width(120).height(180).url() : undefined,
+    })),
+  }));
 
-// Map bundle slugs to icons
-const bundleIcons = {
-  'bundle-60': bronze,
-  'bundle-120': silver,
-  'bundle-180': gold,
+// Map bundle slugs to icons (support both old and new naming)
+const bundleIcons: Record<string, ImageMetadata> = {
+  'bundle-1': bronze,
+  'bundle-2': silver,
+  'bundle-3': gold,
 };
 ---
 
@@ -221,4 +245,7 @@ const bundleIcons = {
       </article>
     </div>
   </section>
+
+  <!-- Bundle Configurator Modal -->
+  <BundleConfigurator client:load />
 </Layout>
