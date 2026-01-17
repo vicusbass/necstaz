@@ -51,14 +51,14 @@ const subscriptionPrice = shop?.subscriptionPrice ?? 0;
 const singleProducts = products.filter((p) => p.productType === 'single');
 const packages = products.filter((p) => p.productType === 'package' || p.productType === 'bundle');
 
-// Sort bundles by slug to match the order: bundle-100, bundle-200, bundle-300
+// Sort bundles by slug to match the order: bundle-60, bundle-120, bundle-180
 const sortedBundles = [...bundles].sort((a, b) => a.slug.current.localeCompare(b.slug.current));
 
 // Map bundle slugs to icons
 const bundleIcons = {
-  'bundle-100': bronze,
-  'bundle-200': silver,
-  'bundle-300': gold,
+  'bundle-60': bronze,
+  'bundle-120': silver,
+  'bundle-180': gold,
 };
 ---
 

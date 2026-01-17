@@ -13,7 +13,7 @@ interface Bundle {
 
 interface Props {
   bundle: Bundle;
-  icon: ImageMetadata;
+  icon?: ImageMetadata;
 }
 
 const { bundle, icon } = Astro.props;
@@ -25,7 +25,7 @@ const { name, description, price, slug } = bundle;
     class="flex h-[140px] w-full shrink-0 items-center justify-center gap-1 bg-transparent px-4 lg:h-[200px] lg:gap-2"
   >
     <div class="flex h-[70px] items-center lg:h-[100px]">
-      <Image src={icon} alt="" class="h-full w-auto object-contain" aria-hidden="true" />
+      {icon && <Image src={icon} alt="" class="h-full w-auto object-contain" aria-hidden="true" />}
       <Image
         src={rectangle}
         alt=""
