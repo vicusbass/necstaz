@@ -94,6 +94,129 @@ The cart supports three product types:
 2. **bundle** - Wine bundles/packages (uses `slug`)
 3. **subscription** - Monthly subscription
 
+## Bundle System
+
+Bundles allow customers to create custom wine packages with discounted prices. The system consists of a configurator modal for selecting wines and specialized cart components for displaying bundle items.
+
+### Bundle File Structure
+
+```
+src/
+├── stores/
+│   └── bundleConfigurator.ts    # Bundle configurator state management
+├── components/
+│   ├── bundle/
+│   │   ├── BundleConfigurator.svelte  # Modal for selecting wines
+│   │   └── BundleWineItem.svelte      # Individual wine in configurator
+│   └── cart/
+│       └── BundleCartItem.svelte      # Bundle display in cart
+└── types/
+    └── cart.ts                        # BundleCartItem, BundleConfig types
+```
+
+### Bundle Configurator Store (`src/stores/bundleConfigurator.ts`)
+
+Central state management for the bundle configuration flow:
+
+**State:**
+- `configuratorState` - Main state containing:
+  - `isOpen` - Whether the modal is visible
+  - `bundleConfig` - Current bundle configuration (from Sanity)
+  - `selections` - Map of productId → quantity
+  - `editingBundleId` - ID of bundle being edited (null for new)
+
+**Derived Values:**
+- `totalBottlesSelected` - Sum of all selected quantities
+- `isConfigurationValid` - Whether selection matches required bottle count
+- `bottlesRemaining` - How many more bottles needed
+- `selectionTotalPrice` - Total price of current selection
+
+**Actions:**
+- `openConfigurator(bundleConfig)` - Open modal with bundle config
+- `editBundle(bundleId, bundleConfig, selections)` - Edit existing bundle
+- `closeConfigurator()` - Close modal and reset state
+- `incrementWineQuantity(productId)` - Add one bottle
+- `decrementWineQuantity(productId)` - Remove one bottle
+- `setWineQuantity(productId, quantity)` - Set specific quantity
+- `buildBundleCartItem()` - Create cart item from current selection
+
+### Bundle Configuration Flow
+
+1. **Opening**: User clicks "Configure" on a bundle card → `openConfigurator(bundleConfig)`
+2. **Selection**: User selects wines using quantity controls
+3. **Validation**: System tracks `totalBottlesSelected` vs `bundleConfig.bottleCount`
+4. **Completion**: When valid, user clicks "Continue" → `buildBundleCartItem()` creates cart item
+5. **Cart**: Bundle added via `addBundleToCart(bundleCartItem)`
+
+### Editing Bundles
+
+Bundles can be edited from the cart:
+
+1. User clicks "Edit" on bundle cart item
+2. `editBundle(bundleId, bundleConfig, currentSelections)` is called
+3. Configurator opens with existing selections pre-populated
+4. On continue, `updateBundleInCart(bundleId, newSelections)` updates the item
+
+### Bundle Types
+
+```typescript
+interface BundleConfig {
+  slug: string;
+  name: string;
+  description: string;
+  bottleCount: number;
+  wineDiscounts: WineDiscount[];
+}
+
+interface WineDiscount {
+  productId: string;
+  productName: string;
+  basePrice: number;
+  discountPercent: number;
+  image?: string;
+}
+
+interface BundleCartItem {
+  id: string;
+  type: 'bundle';
+  bundleSlug: string;
+  name: string;
+  bottleCount: number;
+  selections: BundleSelection[];
+  totalPrice: number;
+}
+
+interface BundleSelection {
+  productId: string;
+  productName: string;
+  quantity: number;
+  basePrice: number;
+  discountedPrice: number;
+}
+```
+
+### Bundle Pricing
+
+- Each wine in a bundle has a `discountPercent` (e.g., 15%)
+- `discountedPrice = basePrice * (1 - discountPercent / 100)`
+- Bundle total = sum of (discountedPrice × quantity) for all selections
+- SGR deposit is calculated separately: `bottleCount × SGR_DEPOSIT`
+
+### CSS Architecture Note
+
+**Important**: Bundle components use global CSS instead of Svelte scoped styles.
+
+Due to a known issue with Svelte 5 + Astro + Vercel SSR builds, scoped `<style>` blocks in Svelte components may not be properly extracted during production builds. This causes styles to work locally but appear broken in production.
+
+**Solution**: All bundle component styles are defined in `src/styles/global.css` within `@layer components`:
+
+- `.bundle-configurator-*` - Modal overlay, header, content, footer
+- `.bundle-wine-*` - Wine item in configurator (image, details, pricing, controls)
+- `.bundle-cart-*` - Bundle item in cart (header, wines list, totals)
+- `.quantity-control` - Shared quantity input component
+
+This pattern matches other cart components and ensures reliable CSS bundling across all deployment environments.
+
 ## Checkout Flow
 
 ### Customer Types
