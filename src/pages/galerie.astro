@@ -7,6 +7,7 @@ import type { GalleryImage } from '../utils/gallery';
 import heroDesktop from '../assets/gallery/hero.png';
 import heroMobile from '../assets/gallery/hero-mobile.jpg';
 import { Image } from 'astro:assets';
+import { urlFor } from '../utils/sanity';
 
 const { data } = await loadQuery<{ images: GalleryImage[] }>({
   query: galleryQuery,
@@ -14,6 +15,13 @@ const { data } = await loadQuery<{ images: GalleryImage[] }>({
 
 const categorized = data?.images ? categorizeGalleryImages(data.images) : [];
 const { desktop, mobile } = layoutGalleryImages(categorized);
+
+// Helper to get optimized Sanity image URL
+function getOptimizedUrl(image: GalleryImage['image'], maxWidth: number) {
+  const builder = urlFor(image);
+  if (!builder) return image.asset.url;
+  return builder.width(maxWidth).auto('format').quality(80).url();
+}
 ---
 
 <Layout title="Galerie | Nextaz">
@@ -62,15 +70,17 @@ const { desktop, mobile } = layoutGalleryImages(categorized);
           const firstIsRectangle = desktop[0]?.isRectangle;
           const isFirstRow = firstIsRectangle ? index === 0 : index < 2;
 
+          // Request optimized image directly from Sanity CDN
+          const maxWidth = item.isRectangle ? 1400 : 700;
+          const optimizedUrl = getOptimizedUrl(item.image, maxWidth);
+
           return (
             <div
               class={`${item.isRectangle ? 'col-span-2' : 'col-span-1'} ${isFirstRow ? 'z-elevated relative lg:-mt-16' : ''}`}
             >
-              <Image
-                src={item.image.asset.url}
+              <img
+                src={optimizedUrl}
                 alt={item.image.alt}
-                width={item.image.asset.metadata.dimensions.width}
-                height={item.image.asset.metadata.dimensions.height}
                 class={
                   item.isRectangle
                     ? 'h-auto w-full object-cover'
@@ -88,19 +98,22 @@ const { desktop, mobile } = layoutGalleryImages(categorized);
     <!-- Mobile Layout -->
     <div class="grid grid-cols-1 gap-4 lg:hidden">
       {
-        mobile.map((item, index) => (
-          <div class={index === 0 ? 'z-elevated relative -mt-12' : ''}>
-            <Image
-              src={item.image.asset.url}
-              alt={item.image.alt}
-              width={item.image.asset.metadata.dimensions.width}
-              height={item.image.asset.metadata.dimensions.height}
-              class="aspect-square w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-        ))
+        mobile.map((item, index) => {
+          // Request optimized image directly from Sanity CDN
+          const optimizedUrl = getOptimizedUrl(item.image, 600);
+
+          return (
+            <div class={index === 0 ? 'z-elevated relative -mt-12' : ''}>
+              <img
+                src={optimizedUrl}
+                alt={item.image.alt}
+                class="aspect-square w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          );
+        })
       }
     </div>
   </section>
