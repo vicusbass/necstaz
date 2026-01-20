@@ -18,7 +18,6 @@ export const cartValidationQuery = groq`{
         "basePrice": product->price,
         discountPercent
       }
-    },
-    subscriptionPrice
+    }
   }
 }`;

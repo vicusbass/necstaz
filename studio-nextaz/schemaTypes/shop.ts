@@ -138,13 +138,6 @@ export const shop = defineType({
       validation: (rule) => rule.required().positive().precision(2),
     }),
     defineField({
-      name: 'subscriptionPrice',
-      title: 'Pret abonament',
-      type: 'number',
-      description: 'Pret in LEI pentru optiunea de abonament',
-      validation: (rule) => rule.required().positive().precision(2),
-    }),
-    defineField({
       name: 'shippingPrice',
       title: 'Cost livrare',
       type: 'number',

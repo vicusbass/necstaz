@@ -88,11 +88,10 @@ Auto-disappearing notifications (bottom-right) when items are added. Uses:
 
 ### Product Types
 
-The cart supports three product types:
+The cart supports two product types:
 
 1. **product** - Individual wines (uses Sanity `_id`)
 2. **bundle** - Wine bundles/packages (uses `slug`)
-3. **subscription** - Monthly subscription
 
 ## Bundle System
 
@@ -483,8 +482,7 @@ Sanity is used only for **reading product data** (prices, descriptions). Orders 
 {
   "products": *[_type == "product" && _id in $productIds]{ _id, name, price },
   "shop": *[_type == "shop" && _id == "shop"][0]{
-    "bundles": bundles[slug.current in $bundleSlugs]{ "id": slug.current, name, price },
-    subscriptionPrice
+    "bundles": bundles[slug.current in $bundleSlugs]{ "id": slug.current, name, price }
   }
 }
 ```

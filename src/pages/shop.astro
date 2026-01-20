@@ -6,7 +6,6 @@ import bronze from '../assets/shop/bronze.png';
 import silver from '../assets/shop/silver.png';
 import gold from '../assets/shop/gold.png';
 import barrels from '../assets/shop/barrels.png';
-import notebook from '../assets/shop/notebook.png';
 import triangle from '../assets/shop/silver.png';
 import { loadQuery } from '../utils/loadQuery';
 import { shopQuery } from '../queries/shop';
@@ -15,7 +14,6 @@ import SingleProductCard from '../components/SingleProductCard.astro';
 import PackageProductCard from '../components/PackageProductCard.astro';
 import BundleCard from '../components/BundleCard.astro';
 import BundleConfigurator from '../components/bundle/BundleConfigurator.svelte';
-import AddToCartButton from '../components/cart/AddToCartButton.svelte';
 
 interface Product {
   _id: string;
@@ -49,14 +47,12 @@ interface Shop {
   products: Product[];
   bundles: Bundle[];
   customProductPrice: number;
-  subscriptionPrice: number;
 }
 
 const { data: shop } = await loadQuery<Shop>({ query: shopQuery });
 const products = shop?.products ?? [];
 const bundles = shop?.bundles ?? [];
 const customProductPrice = shop?.customProductPrice ?? 0;
-const subscriptionPrice = shop?.subscriptionPrice ?? 0;
 
 // Separate products by type
 const singleProducts = products.filter((p) => p.productType === 'single');
@@ -178,72 +174,33 @@ const bundleIcons: Record<string, ImageMetadata> = {
       )
     }
 
-    {/* Special Products - Custom Bundle & Subscription */}
-    <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {/* Custom Bundle Card */}
-      <article class="product-card flex-col lg:py-12">
-        <div class="flex h-[220px] w-full items-end justify-center overflow-hidden pb-4 lg:h-[260px]">
-          <div class="relative flex items-end">
-            <Image
-              src={triangle}
-              alt=""
-              class="h-[150px] w-auto object-contain lg:h-[200px]"
-              aria-hidden="true"
-            />
-            <Image
-              src={barrels}
-              alt="Bundle personalizat"
-              class="-ml-8 h-[150px] w-auto object-contain lg:-ml-10 lg:h-[200px]"
-            />
-          </div>
-        </div>
-        <div class="flex flex-col items-center gap-4 p-6 text-center lg:gap-6 lg:px-8 lg:pt-8">
-          <h3 class="text-xl font-bold text-black">Bundle personalizat</h3>
-          <p class="text-gray text-base max-w-[300px] min-h-13 leading-relaxed">
-            Ai nevoie de o cantitate personalizată sau o selecție specială? Te ajutăm.
-          </p>
-          <p class="text-lg font-bold text-black">
-            40,00 lei
-          </p>
-          <a href="/contact" class="btn-add-to-cart">Contactează-ne</a>
-        </div>
-      </article>
-
-      {/* Subscription Card */}
-      <article class="product-card flex-col lg:py-12">
-        <div class="flex h-[220px] w-full items-end justify-center overflow-hidden pb-4 lg:h-[260px]">
-          <div class="relative flex items-end">
-            <Image
-              src={triangle}
-              alt=""
-              class="h-[150px] w-auto object-contain lg:h-[200px]"
-              aria-hidden="true"
-            />
-            <Image
-              src={notebook}
-              alt="Abonament lunar"
-              class="-ml-8 h-[150px] w-auto object-contain lg:-ml-5 lg:h-[200px]"
-            />
-          </div>
-        </div>
-        <div class="flex flex-col items-center gap-4 p-6 text-center lg:gap-6 lg:px-8 lg:pt-8">
-          <h3 class="text-xl font-bold text-black">Abonament lunar</h3>
-          <p class="text-gray text-base min-h-13 leading-relaxed">
-            Primești vinurile preferate în fiecare lună
-          </p>
-          <p class="text-lg font-bold text-black">
-            40,00 lei
-          </p>
-          <AddToCartButton
-            client:visible
-            productId="subscription"
-            productName="Abonament lunar"
-            productPrice={subscriptionPrice}
-            itemType="subscription"
+    {/* Custom Bundle - Full Width */}
+    <article class="product-card mt-4 flex flex-col lg:flex-row lg:items-center lg:py-12">
+      {/* Images - Left side on desktop */}
+      <div class="flex h-[220px] w-full items-end justify-center overflow-hidden pb-4 lg:h-auto lg:w-1/2 lg:justify-center lg:pb-0">
+        <div class="relative flex items-end">
+          <Image
+            src={triangle}
+            alt=""
+            class="h-[150px] w-auto object-contain lg:h-[240px]"
+            aria-hidden="true"
+          />
+          <Image
+            src={barrels}
+            alt="Bundle personalizat"
+            class="-ml-8 h-[150px] w-auto object-contain lg:-ml-12 lg:h-[240px]"
           />
         </div>
-      </article>
-    </div>
+      </div>
+      {/* Text - Right side on desktop */}
+      <div class="flex flex-col items-center gap-4 p-6 text-center lg:w-1/2 lg:items-start lg:gap-6 lg:px-12 lg:text-left">
+        <h3 class="text-xl font-bold text-black lg:text-2xl">Bundle personalizat</h3>
+        <p class="text-gray text-base max-w-[400px] leading-relaxed lg:text-lg">
+          Ai nevoie de o cantitate personalizată sau o selecție specială? Te ajutăm să creezi pachetul perfect pentru tine sau pentru cadouri.
+        </p>
+        <a href="/contact" class="btn-add-to-cart">Contactează-ne</a>
+      </div>
+    </article>
   </section>
 
   <!-- Bundle Configurator Modal -->

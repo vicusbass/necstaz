@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
-const orderId = Astro.url.searchParams.get('orderId');
+const orderNumber = Astro.url.searchParams.get('orderNumber');
 const isMock = Astro.url.searchParams.get('mock') === 'true';
 ---
 
@@ -19,9 +19,9 @@ const isMock = Astro.url.searchParams.get('mock') === 'true';
         Mulțumim pentru comandă!
       </h1>
 
-      {orderId && (
+      {orderNumber && (
         <p class="order-id">
-          Numărul comenzii tale: <strong>#{orderId}</strong>
+          Numărul comenzii tale: <strong>{orderNumber}</strong>
         </p>
       )}
 
@@ -53,11 +53,12 @@ const isMock = Astro.url.searchParams.get('mock') === 'true';
 
 <script>
   // Clear cart after successful payment
-  import { clearCart } from '../../stores/cart';
+  import { clearCart, initializeCart, subscribeToCartChanges } from '../../stores/cart';
 
   // Only clear cart once when first landing on success page
   // Use a flag to prevent clearing on subsequent navigations
   const CART_CLEARED_KEY = 'necstaz_cart_cleared';
+  const CART_STORAGE_KEY = 'necstaz_cart';
 
   function clearCartOnce() {
     // Check if we're actually on the success page
@@ -74,11 +75,23 @@ const isMock = Astro.url.searchParams.get('mock') === 'true';
       return;
     }
 
-    // Clear the cart and mark as cleared
+    // Initialize cart store and subscribe to changes before clearing
+    // This ensures the cleared state is persisted to localStorage
+    initializeCart();
+    subscribeToCartChanges();
+
+    // Clear the cart via the store
     clearCart();
+
+    // Also clear localStorage directly as a reliable fallback
+    // (in case the store subscription hasn't fully propagated)
+    localStorage.removeItem(CART_STORAGE_KEY);
+
     if (orderNumber) {
       sessionStorage.setItem(CART_CLEARED_KEY, orderNumber);
     }
+
+    console.log('Cart cleared after successful payment');
   }
 
   // Run on initial page load
