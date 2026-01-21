@@ -3,6 +3,7 @@ import type { APIRoute } from 'astro';
 export const prerender = false;
 
 import { updateOrderPaymentStatus } from '../../../lib/supabase';
+import { verifyIPN, isNetopiaConfigured, type IPNPayload } from '../../../lib/netopia';
 import type { Database } from '../../../lib/database.types';
 
 type OrderStatus = Database['public']['Enums']['order_status'];
@@ -20,33 +21,6 @@ const NETOPIA_STATUS = {
   CANCELED: 8,
 } as const;
 
-interface NetopiaIPNPayload {
-  payment: {
-    status: number;
-    ntpID: string;
-    amount: number;
-    currency: string;
-  };
-  order: {
-    ntpID: string;
-    dateTime: string;
-    description: string;
-    orderID: string;
-    amount: number;
-    currency: string;
-    billing: {
-      email: string;
-      phone: string;
-      firstName: string;
-      lastName: string;
-    };
-  };
-  error?: {
-    code: string;
-    message: string;
-  };
-}
-
 function mapNetopiaStatusToOrderStatus(netopiaStatus: number): { orderStatus: OrderStatus; paymentStatus: string } {
   switch (netopiaStatus) {
     case NETOPIA_STATUS.PAID:
@@ -63,22 +37,63 @@ function mapNetopiaStatusToOrderStatus(netopiaStatus: number): { orderStatus: Or
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
-  try {
-    // Parse the IPN payload
-    // In production, this should verify the signature from Netopia
-    const contentType = request.headers.get('content-type');
-    let payload: NetopiaIPNPayload;
+function jsonResponse(data: object, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
-    if (contentType?.includes('application/json')) {
-      payload = await request.json();
-    } else {
-      // Handle form-encoded data if needed
-      const formData = await request.formData();
-      payload = JSON.parse((formData.get('data') as string) || '{}');
+export const POST: APIRoute = async ({ request }) => {
+  console.log('=== IPN POST RECEIVED ===');
+  console.log('Headers:', Object.fromEntries(request.headers.entries()));
+
+  try {
+    // Get verification token from header (Netopia v2)
+    const verifyToken = request.headers.get('verification-token');
+
+    // Parse the IPN payload
+    const contentType = request.headers.get('content-type');
+    let payload: IPNPayload;
+
+    // Clone request to read body as text first for debugging
+    const bodyText = await request.text();
+    console.log('Raw IPN body:', bodyText);
+
+    if (!bodyText) {
+      console.error('IPN received with empty body');
+      return jsonResponse(
+        { errorType: 1, errorCode: 'EMPTY_BODY', errorMessage: 'Empty request body' },
+        400
+      );
     }
 
-    console.log('Received IPN:', JSON.stringify(payload, null, 2));
+    if (contentType?.includes('application/json')) {
+      payload = JSON.parse(bodyText);
+    } else {
+      // Handle form-encoded data if needed
+      const params = new URLSearchParams(bodyText);
+      payload = JSON.parse(params.get('data') || '{}');
+    }
+
+    console.log('Parsed IPN payload:', JSON.stringify(payload, null, 2));
+    console.log('Verification token present:', !!verifyToken);
+
+    // Verify IPN signature if Netopia is configured and token is present
+    if (isNetopiaConfigured() && verifyToken) {
+      const isValid = await verifyIPN(verifyToken, payload);
+      if (!isValid) {
+        console.error('IPN signature verification failed');
+        return jsonResponse(
+          { errorType: 1, errorCode: 'INVALID_SIGNATURE', errorMessage: 'Invalid signature' },
+          400
+        );
+      }
+      console.log('IPN signature verified successfully');
+    } else if (isNetopiaConfigured() && !verifyToken) {
+      console.warn('IPN received without verification token');
+      // Continue processing - some Netopia configurations may not send token
+    }
 
     // Extract order information
     // orderID from Netopia is our order_number (e.g., "2026-000001")
@@ -88,14 +103,16 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!orderNumber) {
       console.error('IPN missing orderID (order number)');
-      return new Response(
-        JSON.stringify({ errorType: 0, errorCode: '', errorMessage: 'Missing orderID' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return jsonResponse(
+        { errorType: 1, errorCode: 'MISSING_ORDER', errorMessage: 'Missing orderID' },
+        400
       );
     }
 
     // Map Netopia status to our order status
     const { orderStatus, paymentStatus } = mapNetopiaStatusToOrderStatus(netopiaStatus);
+
+    console.log(`IPN for order ${orderNumber}: Netopia status ${netopiaStatus} -> ${orderStatus} (${paymentStatus})`);
 
     // Update order in database (Supabase)
     try {
@@ -116,40 +133,27 @@ export const POST: APIRoute = async ({ request }) => {
     // }
 
     // Return success response to Netopia
-    // Netopia expects a specific response format
-    return new Response(
-      JSON.stringify({
-        errorType: 0,
-        errorCode: '',
-        errorMessage: 'OK',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    // Netopia expects this specific response format
+    return jsonResponse({
+      errorType: 0,
+      errorCode: '',
+      errorMessage: 'OK',
+    });
   } catch (error) {
     console.error('IPN processing error:', error);
 
     // Return error response to Netopia
-    return new Response(
-      JSON.stringify({
-        errorType: 1,
-        errorCode: 'SERVER_ERROR',
-        errorMessage: 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return jsonResponse(
+      { errorType: 1, errorCode: 'SERVER_ERROR', errorMessage: 'Internal server error' },
+      500
     );
   }
 };
 
 // Also support GET for testing/health check
 export const GET: APIRoute = async () => {
-  return new Response(JSON.stringify({ status: 'IPN endpoint active' }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
+  return jsonResponse({
+    status: 'IPN endpoint active',
+    netopiaConfigured: isNetopiaConfigured(),
   });
 };

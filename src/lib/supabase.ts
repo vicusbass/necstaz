@@ -181,6 +181,27 @@ export async function updateOrderShipping(
   return true;
 }
 
+export async function updateOrderPaymentReference(
+  orderNumber: string,
+  paymentReference: string
+): Promise<boolean> {
+  const updateData: OrderUpdate = {
+    payment_reference: paymentReference,
+  };
+
+  const { error } = await supabase
+    .from('orders')
+    .update(updateData)
+    .eq('order_number', orderNumber);
+
+  if (error) {
+    console.error('Failed to update payment reference:', error);
+    throw new Error(`Failed to update payment reference: ${error.message}`);
+  }
+
+  return true;
+}
+
 export async function getOrderByNumber(orderNumber: string) {
   const { data, error } = await supabase
     .from('orders')

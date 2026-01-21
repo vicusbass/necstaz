@@ -22,7 +22,6 @@ interface CartValidationResult {
   products: SanityProduct[];
   shop: {
     bundles: SanityBundle[];
-    subscriptionPrice: number;
   };
 }
 
@@ -46,7 +45,6 @@ export const POST: APIRoute = async ({ request }) => {
     // Extract IDs for products and slugs for bundles
     const productIds = items.filter((i) => i.type === 'product').map((i) => i.id);
     const bundleSlugs = items.filter((i) => i.type === 'bundle').map((i) => i.id);
-    const hasSubscription = items.some((i) => i.type === 'subscription');
 
     // Fetch current prices from Sanity
     const { data } = await loadQuery<CartValidationResult>({
@@ -82,14 +80,6 @@ export const POST: APIRoute = async ({ request }) => {
           isValid = true;
         } else {
           error = `Pachetul "${item.name}" nu a fost găsit`;
-          errors.push(error);
-        }
-      } else if (item.type === 'subscription') {
-        if (data?.shop?.subscriptionPrice != null) {
-          validatedPrice = data.shop.subscriptionPrice;
-          isValid = true;
-        } else {
-          error = 'Abonamentul nu este disponibil';
           errors.push(error);
         }
       }

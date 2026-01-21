@@ -6,8 +6,9 @@ import { loadQuery } from '../../../utils/loadQuery';
 import { cartValidationQuery } from '../../../queries/cart';
 import type { CartItem, Customer, PersonCustomer, CompanyCustomer, AnyCartItem, BundleCartItem } from '../../../types/cart';
 import { SGR_DEPOSIT, PACKAGE_BOTTLE_COUNT } from '../../../config';
-import { createOrder, type CreateOrderParams } from '../../../lib/supabase';
+import { createOrder, updateOrderPaymentReference, type CreateOrderParams } from '../../../lib/supabase';
 import type { OrderItem } from '../../../lib/database.types';
+import { isNetopiaConfigured, initiatePayment } from '../../../lib/netopia';
 
 interface SanityProduct {
   _id: string;
@@ -33,7 +34,6 @@ interface CartValidationResult {
   products: SanityProduct[];
   shop: {
     bundles: SanityBundle[];
-    subscriptionPrice: number;
   };
 }
 
@@ -241,20 +241,6 @@ export const POST: APIRoute = async ({ request }) => {
         } else {
           errors.push(`Pachetul \"${cartItem.name}\" nu a fost găsit`);
         }
-      } else if (item.type === 'subscription') {
-        const cartItem = item as CartItem;
-        if (data?.shop?.subscriptionPrice != null) {
-          validatedItems.push({
-            id: cartItem.id,
-            type: cartItem.type,
-            name: cartItem.name,
-            price: data.shop.subscriptionPrice,
-            quantity: cartItem.quantity,
-          });
-          subtotal += data.shop.subscriptionPrice * cartItem.quantity;
-        } else {
-          errors.push('Abonamentul nu este disponibil');
-        }
       }
     }
 
@@ -378,18 +364,8 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // TODO: Integrate with Netopia
-    // For now, return a mock success with redirect to a placeholder
-    // In production, this would:
-    // 1. Call Netopia API to create a payment
-    // 2. Return the Netopia payment URL
-
-    // Mock implementation - replace with actual Netopia integration
-    const isNetopiaConfigured = !!(
-      import.meta.env.NETOPIA_API_KEY && import.meta.env.NETOPIA_POS_SIGNATURE
-    );
-
-    if (!isNetopiaConfigured) {
+    // Check if Netopia is configured
+    if (!isNetopiaConfigured()) {
       // Development mode - redirect to success page directly
       console.log('Netopia not configured, using mock payment flow');
       return new Response(
@@ -403,15 +379,72 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // TODO: Real Netopia integration here
-    // const netopiaResponse = await initiateNetopiaPayment(orderNumber, total, customer);
-    // return netopiaResponse.paymentUrl;
+    // Build customer data for Netopia
+    // Use HTTPS for callback URLs (ngrok and production both require HTTPS)
+    let origin = new URL(request.url).origin;
+    if (origin.startsWith('http://') && !origin.includes('localhost')) {
+      origin = origin.replace('http://', 'https://');
+    }
+    let firstName: string;
+    let lastName: string;
+
+    if (customer.type === 'person') {
+      const personCustomer = customer as PersonCustomer;
+      firstName = personCustomer.firstName;
+      lastName = personCustomer.lastName;
+    } else {
+      const companyCustomer = customer as CompanyCustomer;
+      // For companies, use contact person or company name
+      firstName = companyCustomer.contactPerson?.split(' ')[0] || companyCustomer.companyName;
+      lastName = companyCustomer.contactPerson?.split(' ').slice(1).join(' ') || '';
+    }
+
+    // Initiate Netopia payment
+    const netopiaResult = await initiatePayment({
+      orderNumber,
+      amount: total,
+      currency: 'RON',
+      description: `Comandă ${orderNumber} - Necstaz`,
+      customer: {
+        firstName,
+        lastName,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.deliveryAddress.street,
+        city: customer.deliveryAddress.city,
+        county: customer.deliveryAddress.county,
+        postalCode: customer.deliveryAddress.postalCode,
+      },
+      notifyUrl: `${origin}/api/payment/ipn`,
+      redirectUrl: `${origin}/payment/success?orderNumber=${orderNumber}`,
+    });
+
+    if (!netopiaResult.success) {
+      console.error('Netopia payment initiation failed:', netopiaResult.error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Eroare la inițierea plății: ${netopiaResult.error}`,
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Store Netopia payment reference (ntpID) for later verification
+    try {
+      await updateOrderPaymentReference(orderNumber, netopiaResult.ntpID);
+    } catch (refError) {
+      console.warn('Failed to store payment reference:', refError);
+      // Continue anyway - payment can still proceed
+    }
+
+    console.log(`Payment initiated for order ${orderNumber}, redirecting to Netopia`);
 
     return new Response(
       JSON.stringify({
         success: true,
         orderNumber,
-        paymentUrl: `/payment/success?orderNumber=${orderNumber}`,
+        paymentUrl: netopiaResult.paymentUrl,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

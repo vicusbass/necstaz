@@ -26,7 +26,6 @@ export const shopQuery = groq`
         discountPercent
       }
     },
-    customProductPrice,
-    subscriptionPrice
+    customProductPrice
   }
 `;

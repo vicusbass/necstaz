@@ -1,5 +1,5 @@
 // Cart item types
-export type CartItemType = 'product' | 'bundle' | 'subscription';
+export type CartItemType = 'product' | 'bundle';
 
 export interface CartItem {
   id: string; // Sanity _id for products, slug for bundles
