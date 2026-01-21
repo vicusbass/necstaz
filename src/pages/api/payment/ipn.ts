@@ -2,8 +2,9 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-import { updateOrderPaymentStatus } from '../../../lib/supabase';
+import { updateOrderPaymentStatus, getOrderByNumber } from '../../../lib/supabase';
 import { verifyIPN, isNetopiaConfigured, type IPNPayload } from '../../../lib/netopia';
+import { sendOrderConfirmationEmails } from '../../../lib/email';
 import type { Database } from '../../../lib/database.types';
 
 type OrderStatus = Database['public']['Enums']['order_status'];
@@ -127,10 +128,21 @@ export const POST: APIRoute = async ({ request }) => {
       // Don't fail the IPN response - Netopia needs confirmation
     }
 
-    // TODO: Send confirmation email if payment succeeded
-    // if (paymentStatus === 'paid') {
-    //   await sendOrderConfirmationEmail(orderNumber);
-    // }
+    // Send confirmation emails if payment succeeded
+    if (paymentStatus === 'paid') {
+      try {
+        const order = await getOrderByNumber(orderNumber);
+        if (order) {
+          const emailResults = await sendOrderConfirmationEmails(order);
+          console.log(`Email results for order ${orderNumber}:`, emailResults);
+        } else {
+          console.error(`Could not fetch order ${orderNumber} for sending emails`);
+        }
+      } catch (emailError) {
+        // Don't fail the IPN response if emails fail
+        console.error('Failed to send confirmation emails:', emailError);
+      }
+    }
 
     // Return success response to Netopia
     // Netopia expects this specific response format
