@@ -25,6 +25,17 @@ export function getNetopiaConfig(): NetopiaConfig {
   const publicKey = import.meta.env.NETOPIA_PUBLIC_KEY;
   const isLive = import.meta.env.NETOPIA_SANDBOX !== 'true';
 
+  // Debug logging for Vercel
+  console.log('Netopia config check:', {
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey?.length,
+    apiKeyStart: apiKey?.substring(0, 10),
+    hasPosSignature: !!posSignature,
+    posSignature: posSignature,
+    sandboxEnv: import.meta.env.NETOPIA_SANDBOX,
+    isLive: isLive,
+  });
+
   if (!apiKey || !posSignature) {
     throw new Error('Netopia credentials not configured (NETOPIA_API_KEY, NETOPIA_POS_SIGNATURE)');
   }
