@@ -18,9 +18,12 @@ const TEMPLATES = {
 
 /**
  * Order data structure passed to Resend templates
- * Use these variable names in your Resend templates
+ * Use these variable names in your Resend templates with {{variable_name}} syntax
+ *
+ * Note: Variable keys may only contain ASCII letters (a–z, A–Z), numbers (0–9), and underscores
+ * String values have a maximum of 2,000 characters
  */
-export interface OrderTemplateData {
+export interface OrderTemplateVariables {
   // Order info
   order_number: string;
   order_date: string;
@@ -30,42 +33,29 @@ export interface OrderTemplateData {
   customer_email: string;
   customer_phone: string;
 
-  // Items - as a formatted HTML string for simplicity, or individual item data
-  items: Array<{
-    name: string;
-    quantity: number;
-    unit_price: string;
-    total_price: string;
-    variant?: string;
-    image_url?: string;
-  }>;
+  // Company info (for B2B orders)
+  is_company: string; // "true" or "false"
+  company_name: string;
+  company_vat: string; // CUI
+  company_reg: string; // Nr. Reg. Com.
+
+  // Items as pre-formatted HTML table
+  items_html: string;
+  items_count: number;
 
   // Pricing
   subtotal: string;
   shipping_cost: string;
   discount_amount: string;
-  has_discount: boolean;
-  is_free_shipping: boolean;
+  has_discount: string; // "true" or "false" as string for template conditionals
+  is_free_shipping: string;
   total: string;
 
   // Shipping address
-  shipping_name: string;
-  shipping_street: string;
-  shipping_city: string;
-  shipping_county: string;
-  shipping_postal_code: string;
-  shipping_country: string;
+  shipping_full_address: string;
 
   // Billing address
-  billing_name: string;
-  billing_street: string;
-  billing_city: string;
-  billing_county: string;
-  billing_postal_code: string;
-  billing_country: string;
-  billing_company_name: string;
-  billing_vat_number: string;
-  is_company: boolean;
+  billing_full_address: string;
 }
 
 function formatCurrency(amount: number): string {
@@ -82,8 +72,59 @@ function formatDate(dateString: string): string {
   }).format(new Date(dateString));
 }
 
-function orderToTemplateData(order: Order): OrderTemplateData {
-  const items = order.items as OrderItem[];
+function formatAddress(address: {
+  name: string;
+  street: string;
+  city: string;
+  county: string;
+  postalCode: string;
+  country: string;
+  companyName?: string;
+}): string {
+  const parts = [address.name];
+  if (address.companyName) parts.unshift(address.companyName);
+  parts.push(address.street);
+  parts.push(`${address.city}${address.county ? `, ${address.county}` : ''}`);
+  parts.push(address.postalCode);
+  parts.push(address.country);
+  return parts.join('\n');
+}
+
+function formatItemsHtml(items: OrderItem[]): string {
+  const rows = items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">
+          <strong style="color: #111827;">${item.product_name}</strong>
+          ${item.variant ? `<br><span style="color: #6b7280; font-size: 13px;">${item.variant}</span>` : ''}
+        </td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #374151;">${item.quantity}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151;">${formatCurrency(item.unit_price)}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #111827; font-weight: 500;">${formatCurrency(item.total_price)}</td>
+      </tr>`
+    )
+    .join('');
+
+  return `
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f9fafb;">
+          <th style="padding: 12px 8px; text-align: left; color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Produs</th>
+          <th style="padding: 12px 8px; text-align: center; color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Cant.</th>
+          <th style="padding: 12px 8px; text-align: right; color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Preț</th>
+          <th style="padding: 12px 8px; text-align: right; color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+}
+
+function orderToTemplateVariables(order: Order): OrderTemplateVariables {
+  const items = order.items as unknown as OrderItem[];
 
   return {
     // Order info
@@ -95,42 +136,44 @@ function orderToTemplateData(order: Order): OrderTemplateData {
     customer_email: order.customer_email,
     customer_phone: order.customer_phone || 'N/A',
 
-    // Items
-    items: items.map((item) => ({
-      name: item.product_name,
-      quantity: item.quantity,
-      unit_price: formatCurrency(item.unit_price),
-      total_price: formatCurrency(item.total_price),
-      variant: item.variant,
-      image_url: item.image_url,
-    })),
+    // Company info (for B2B orders)
+    is_company: order.billing_company_name ? 'true' : 'false',
+    company_name: order.billing_company_name || '',
+    company_vat: order.billing_vat_number || '',
+    company_reg: order.billing_registration_number || '',
+
+    // Items as HTML table
+    items_html: formatItemsHtml(items),
+    items_count: items.length,
 
     // Pricing
     subtotal: formatCurrency(order.subtotal),
     shipping_cost: formatCurrency(order.shipping_cost),
     discount_amount: formatCurrency(order.discount_amount),
-    has_discount: order.discount_amount > 0,
-    is_free_shipping: order.shipping_cost === 0,
+    has_discount: order.discount_amount > 0 ? 'true' : 'false',
+    is_free_shipping: order.shipping_cost === 0 ? 'true' : 'false',
     total: formatCurrency(order.total_amount),
 
     // Shipping address
-    shipping_name: order.shipping_name,
-    shipping_street: order.shipping_street,
-    shipping_city: order.shipping_city,
-    shipping_county: order.shipping_county || '',
-    shipping_postal_code: order.shipping_postal_code,
-    shipping_country: order.shipping_country,
+    shipping_full_address: formatAddress({
+      name: order.shipping_name,
+      street: order.shipping_street,
+      city: order.shipping_city,
+      county: order.shipping_county || '',
+      postalCode: order.shipping_postal_code,
+      country: order.shipping_country,
+    }),
 
     // Billing address
-    billing_name: order.billing_name,
-    billing_street: order.billing_street,
-    billing_city: order.billing_city,
-    billing_county: order.billing_county || '',
-    billing_postal_code: order.billing_postal_code,
-    billing_country: order.billing_country,
-    billing_company_name: order.billing_company_name || '',
-    billing_vat_number: order.billing_vat_number || '',
-    is_company: !!order.billing_company_name,
+    billing_full_address: formatAddress({
+      name: order.billing_name,
+      street: order.billing_street,
+      city: order.billing_city,
+      county: order.billing_county || '',
+      postalCode: order.billing_postal_code,
+      country: order.billing_country,
+      companyName: order.billing_company_name || undefined,
+    }),
   };
 }
 
@@ -144,16 +187,16 @@ export async function sendCustomerOrderConfirmation(order: Order): Promise<{ suc
   }
 
   try {
-    const templateData = orderToTemplateData(order);
+    const variables = orderToTemplateVariables(order);
 
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to: order.customer_email,
-      subject: `Confirmare comanda #${order.order_number} - Nextaz`,
-      react: undefined, // Using template instead
-      // @ts-expect-error - Resend SDK types don't include template support yet
-      template_id: TEMPLATES.CUSTOMER_ORDER_CONFIRMATION,
-      data: templateData,
+      to: [order.customer_email],
+      subject: `Confirmare comandă #${order.order_number} - Nextaz`,
+      template: {
+        id: TEMPLATES.CUSTOMER_ORDER_CONFIRMATION,
+        variables: variables as unknown as Record<string, string | number>,
+      },
     });
 
     if (error) {
@@ -179,17 +222,17 @@ export async function sendAdminOrderNotification(order: Order): Promise<{ succes
   }
 
   try {
-    const templateData = orderToTemplateData(order);
+    const variables = orderToTemplateVariables(order);
 
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to: ADMIN_EMAIL,
+      to: [ADMIN_EMAIL],
       replyTo: order.customer_email,
-      subject: `[Comanda noua] #${order.order_number} - ${order.customer_name} - ${formatCurrency(order.total_amount)}`,
-      react: undefined, // Using template instead
-      // @ts-expect-error - Resend SDK types don't include template support yet
-      template_id: TEMPLATES.ADMIN_ORDER_NOTIFICATION,
-      data: templateData,
+      subject: `[Comandă nouă] #${order.order_number} - ${order.customer_name} - ${formatCurrency(order.total_amount)}`,
+      template: {
+        id: TEMPLATES.ADMIN_ORDER_NOTIFICATION,
+        variables: variables as unknown as Record<string, string | number>,
+      },
     });
 
     if (error) {
