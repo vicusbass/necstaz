@@ -147,7 +147,6 @@ import wineGlass from '../assets/play-wine-glass.jpg';
 <style></style>
 
 <script>
-  import { subscribeEmail } from '../lib/newsletter';
   import { showToast } from '../stores/cart';
 
   function initNewsletterForm() {
@@ -168,7 +167,15 @@ import wineGlass from '../assets/play-wine-glass.jpg';
       submitButton.textContent = 'Se procesează...';
 
       try {
-        const result = await subscribeEmail(email);
+        const formData = new FormData();
+        formData.append('email', email);
+
+        const response = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
 
         if (result.success) {
           showToast('✓ Te-ai abonat cu succes la newsletter!');
