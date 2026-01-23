@@ -7,7 +7,6 @@ import type { GalleryImage } from '../utils/gallery';
 import heroDesktop from '../assets/gallery/hero.png';
 import heroMobile from '../assets/gallery/hero-mobile.jpg';
 import { Image } from 'astro:assets';
-import ContactForm from '../components/ContactForm.astro';
 import { urlFor } from '../utils/sanity';
 
 const { data } = await loadQuery<{ images: GalleryImage[] }>({
@@ -118,5 +117,4 @@ function getOptimizedUrl(image: GalleryImage['image'], maxWidth: number) {
       }
     </div>
   </section>
-  <ContactForm />
 </Layout>

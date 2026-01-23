@@ -6,6 +6,7 @@ import Toast from '../components/cart/Toast.svelte';
 import { ClientRouter } from 'astro:transitions';
 import SpeedInsights from '@vercel/speed-insights/astro';
 import '@fontsource-variable/red-hat-display';
+import ContactForm from '../components/ContactForm.astro';
 
 interface Props {
   title?: string;
@@ -116,24 +117,6 @@ const siteName = 'Nextaz';
       })}
     />
 
-    <!-- MailerLite Universal -->
-    <script>
-      (function (w, d, e, u, f, l, n) {
-        ((w[f] =
-          w[f] ||
-          function () {
-            (w[f].q = w[f].q || []).push(arguments);
-          }),
-          (l = d.createElement(e)),
-          (l.async = 1),
-          (l.src = u),
-          (n = d.getElementsByTagName(e)[0]),
-          n.parentNode.insertBefore(l, n));
-      })(window, document, 'script', 'https://assets.mailerlite.com/js/universal.js', 'ml');
-      ml('account', '2042666');
-    </script>
-    <!-- End MailerLite Universal -->
-
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">
@@ -141,6 +124,7 @@ const siteName = 'Nextaz';
     <main class="main-content">
       <slot />
     </main>
+    <ContactForm />
     <Footer transition:persist />
     <Toast client:load transition:persist />
     <SpeedInsights />

@@ -15,7 +15,25 @@ import wineGlass from '../assets/play-wine-glass.jpg';
     <div
       class="absolute top-[20%] left-[10%] flex h-[60%] w-[80%] flex-col items-center justify-center gap-6 border border-white/30 bg-white/1 px-7 py-10 shadow-2xl backdrop-blur-sm lg:gap-12 lg:px-13 lg:py-16"
     >
-      <div class="ml-embedded" data-form="JZonSN"></div>
+      <form id="newsletter-form" class="flex w-full max-w-md flex-col gap-6 lg:max-w-lg lg:gap-14">
+        <h4 class="text-center text-[22px] leading-6 font-bold lg:text-[52px] lg:leading-12">
+          Abonează-te la newsletter-ul nostru
+        </h4>
+        <input
+          type="email"
+          name="email"
+          id="newsletter-email"
+          placeholder="Introdu adresa ta de e-mail"
+          required
+          class="placeholder:text-gray text-gray-dark bg-white p-2 text-center text-[14px] focus:outline-none lg:p-4 lg:text-xl"
+        />
+        <button
+          type="submit"
+          class="m-auto bg-black px-8 py-2.5 text-[14px] font-medium text-white transition-all hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 lg:px-12 lg:py-4 lg:text-2xl"
+        >
+          Abonează-te
+        </button>
+      </form>
     </div>
   </div>
   <h2 class="mb-8 text-3xl font-bold lg:text-[3.25rem]">Contactează-ne</h2>
@@ -129,6 +147,44 @@ import wineGlass from '../assets/play-wine-glass.jpg';
 <style></style>
 
 <script>
+  import { subscribeEmail } from '../lib/newsletter';
+  import { showToast } from '../stores/cart';
+
+  function initNewsletterForm() {
+    const form = document.getElementById('newsletter-form') as HTMLFormElement;
+    const emailInput = document.getElementById('newsletter-email') as HTMLInputElement;
+    const submitButton = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+    if (!form || !emailInput || !submitButton) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      const originalText = submitButton.textContent;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Se procesează...';
+
+      try {
+        const result = await subscribeEmail(email);
+
+        if (result.success) {
+          showToast('✓ Te-ai abonat cu succes la newsletter!');
+          form.reset();
+        } else {
+          showToast('✗ ' + (result.message || 'Abonarea a eșuat. Te rugăm să încerci din nou.'));
+        }
+      } catch (error) {
+        showToast('✗ A apărut o eroare. Te rugăm să încerci din nou.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    });
+  }
+
   function initContactForm() {
     const form = document.getElementById('contact-form') as HTMLFormElement;
     const successModal = document.getElementById('success-modal');
@@ -243,6 +299,7 @@ import wineGlass from '../assets/play-wine-glass.jpg';
   }
 
   document.addEventListener('astro:page-load', () => {
+    initNewsletterForm();
     initContactForm();
   });
 </script>

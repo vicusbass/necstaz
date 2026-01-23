@@ -14,7 +14,6 @@ import SingleProductCard from '../components/SingleProductCard.astro';
 import PackageProductCard from '../components/PackageProductCard.astro';
 import BundleCard from '../components/BundleCard.astro';
 import BundleConfigurator from '../components/bundle/BundleConfigurator.svelte';
-import ContactForm from '../components/ContactForm.astro';
 
 interface Product {
   _id: string;
@@ -211,6 +210,4 @@ const bundleIcons: Record<string, ImageMetadata> = {
 
   <!-- Bundle Configurator Modal -->
   <BundleConfigurator client:load />
-
-  <ContactForm />
 </Layout>
