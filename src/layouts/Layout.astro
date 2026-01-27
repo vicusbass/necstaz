@@ -128,5 +128,66 @@ const siteName = 'Nextaz';
     <Footer transition:persist />
     <Toast client:load transition:persist />
     <SpeedInsights />
+
+    <!-- Age Verification Modal -->
+    <div
+      id="age-verification-modal"
+      class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/90 px-4"
+    >
+      <div class="max-w-md bg-white p-8 text-center lg:p-12">
+        <h2 class="mb-6 text-2xl font-bold lg:text-3xl">Verificare vârstă</h2>
+        <p class="mb-8 text-lg text-gray-700">
+          Confirmi că ai peste 18 ani și poți accesa acest site?
+        </p>
+        <div class="flex flex-col gap-4">
+          <button
+            id="age-confirm-yes"
+            class="bg-black px-8 py-4 text-lg font-medium text-white transition-all hover:bg-gray-800"
+          >
+            Am peste 18 ani
+          </button>
+          <button
+            id="age-confirm-no"
+            class="border border-black px-8 py-4 text-lg font-medium text-black transition-all hover:bg-gray-100"
+          >
+            Nu am peste 18 ani
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script is:inline>
+      (function () {
+        const AGE_VERIFIED_KEY = 'nextaz_age_verified';
+        const modal = document.getElementById('age-verification-modal');
+        const confirmYes = document.getElementById('age-confirm-yes');
+        const confirmNo = document.getElementById('age-confirm-no');
+
+        if (!modal || !confirmYes || !confirmNo) return;
+
+        // Check if user has already verified age
+        const isVerified = localStorage.getItem(AGE_VERIFIED_KEY);
+
+        if (!isVerified) {
+          // Show modal
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          document.body.style.overflow = 'hidden';
+        }
+
+        // Handle "Am peste 18 ani"
+        confirmYes.addEventListener('click', () => {
+          localStorage.setItem(AGE_VERIFIED_KEY, 'true');
+          modal.classList.remove('flex');
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        });
+
+        // Handle "Nu am peste 18 ani"
+        confirmNo.addEventListener('click', () => {
+          window.location.href = 'https://www.consuma-responsabil.ro';
+        });
+      })();
+    </script>
   </body>
 </html>
